@@ -1,10 +1,10 @@
 <!--
  * @Author: Ducky Yang
  * @Date: 2021-01-24 08:45:33
- * @LastEditTime: 2021-01-24 08:50:53
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 10:19:32
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\README.md
+ * @FilePath: /duckyorm/README.md
 -->
 ### DuckyOrm
 > Ducky Yang

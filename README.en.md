@@ -1,36 +1,13 @@
-# duckyorm
+<!--
+ * @Author: your name
+ * @Date: 2021-01-24 08:45:33
+ * @LastEditTime: 2021-01-24 08:52:20
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \FastMysqlOrm\README.en.md
+-->
+### DuckyOrm
+> Ducky Yang
 
-#### Description
-nodejs mysql orm
-
-#### Software Architecture
-Software architecture description
-
-#### Installation
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### Instructions
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### Contribution
-
-1.  Fork the repository
-2.  Create Feat_xxx branch
-3.  Commit your code
-4.  Create Pull Request
-
-
-#### Gitee Feature
-
-1.  You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
-2.  Gitee blog [blog.gitee.com](https://blog.gitee.com)
-3.  Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
-4.  The most valuable open source project [GVP](https://gitee.com/gvp)
-5.  The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
-6.  The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+> It's my practice project,it's a mysql orm framework for nodejs. 
+> If you want to find a stable and efficient orm framework, please try to find others.Thanks

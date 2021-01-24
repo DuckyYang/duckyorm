@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-20 13:21:26
- * @LastEditTime: 2021-01-22 13:37:53
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:34:31
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \ducky.note\FastMysqlOrm\FastMysqlQuery.js
+ * @FilePath: /duckyorm/src/lib/command/Query.ts
  */
 
 import {
@@ -22,7 +22,7 @@ class FastMysqlQuery implements IQuery {
     order: "",
   };
   /**
-   * where条件占位符对应的值
+   * where sql placeholder's value
    */
   whereValues: Array<string> = [];
   constructor(fmom: IFastMysqlOrmModel) {
@@ -43,12 +43,13 @@ class FastMysqlQuery implements IQuery {
     return this;
   }
   /**
-   * 指定查询的列名
-   * @param {any} columns 支持字符串数组和对象。columns={name:"userName"}，则生成SELECT name as userName FROM XXX
+   * set query columns
+   * @param {any} columns array or object.If is object like {name:"userName"}，
+   * it will generate sql like 'SELECT name as userName FROM XXX;'
    */
   select(columns: object | Array<string>) {
     const modelDefines = this.fmom.modelDefines;
-    // 如果col不为空，则查询指定的列名
+    // if columns is empty, it will use defines
     let arr = [];
     if (!columns || (Array.isArray(columns) && columns.length === 0)) {
       for (let index = 0; index < modelDefines.length; index++) {
@@ -90,8 +91,9 @@ class FastMysqlQuery implements IQuery {
     return this;
   }
   /**
-   * 设置排序
-   * @param {Array<Array<string>>} order 排序数组，例如：[["id","asc"],["age","desc"]]，解析为：order by id asc, age desc
+   * set query order 
+   * @param {Array<Array<string>>} order eg: [["id","asc"],["age","desc"]]
+   * sql is 'order by id asc, age desc'
    */
   order(order: Array<Array<string>>) {
     if (order.length > 0) {
@@ -115,7 +117,7 @@ class FastMysqlQuery implements IQuery {
     return this;
   }
   /**
-   * 查询单条记录，返回top 1
+   * query single record
    */
   async single() {
     return new Promise(async (resolve, reject) => {
@@ -128,12 +130,17 @@ class FastMysqlQuery implements IQuery {
         const models = _mapToModel(this.fmom.diffPropColMapping, results);
         if (models && models.length > 0) {
           resolve(models[0]);
+        } else {
+          resolve(null);
         }
       } catch (error) {
         reject(error);
       }
     });
   }
+  /**
+   * query all records
+   */
   async list() {
     return new Promise(async (resolve, reject) => {
       if (!this.queryExpression.select) {
@@ -156,11 +163,11 @@ class FastMysqlQuery implements IQuery {
     });
   }
   /**
-   * 查询分页
-   * @param {number} pageNo 分页索引
-   * @param {number} pageSize 分页大小
+   * query page records
+   * @param {number} pageNo page number
+   * @param {number} pageSize page size, default 12
    */
-  async page(pageNo: number, pageSize: number) {
+  async page(pageNo: number, pageSize?: number) {
     return new Promise(async (resolve, reject) => {
       if (!pageNo || pageNo <= 0) {
         pageNo = 1;
@@ -195,6 +202,11 @@ class FastMysqlQuery implements IQuery {
     });
   }
 }
+/**
+ * map query results to define models
+ * @param modelDefines 
+ * @param results 
+ */
 function _mapToModel(
   modelDefines: Array<IFastMysqlOrmModelDefine>,
   results: any

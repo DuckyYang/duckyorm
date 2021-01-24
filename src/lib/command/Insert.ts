@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-20 13:53:33
- * @LastEditTime: 2021-01-22 14:57:46
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:25:34
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \ducky.note\FastMysqlOrm\FastMysqlInsert.js
+ * @FilePath: /duckyorm/src/lib/command/Insert.ts
  */
 import {
   IFastMysqlOrmModel,
@@ -17,11 +17,11 @@ class FastMysqlInsert implements IInsert {
 
   values: Array<object>;
   /**
-   * 插入列sql表达式
+   * sql of inserted columns
    */
   columnsExpression = "";
   /**
-   * 列定义的Model
+   * inserted columns model defines
    */
   columnModels: Array<IFastMysqlOrmModelDefine>;
 
@@ -34,7 +34,7 @@ class FastMysqlInsert implements IInsert {
   }
 
   /**
-   * 插入单条数据
+   * insert single value
    * @param {object} value
    */
   setValue(value: object) {
@@ -42,14 +42,16 @@ class FastMysqlInsert implements IInsert {
     return this;
   }
   /**
-   * 批量插入
+   * insert multiple values
    * @param {Array<object>} values
    */
   setValues(values: Array<object>) {
     this.values = values;
     return this;
   }
-
+/**
+ * exec sql
+ */
   async exec() {
     return new Promise((resolve, reject) => {
       const sql = `INSERT INTO \`${this.fmom.tableName}\` (${this.columnsExpression}) VALUES ?`;
@@ -64,7 +66,7 @@ class FastMysqlInsert implements IInsert {
     let arr = [];
     for (let index = 0; index < this.fmom.modelDefines.length; index++) {
       const modelDefine = this.fmom.modelDefines[index];
-      // 没有忽略插入并且不是自增列
+      // if set ignore or is auto increment column
       if (
         !modelDefine.ignore &&
         !modelDefine.ignoreInsert &&

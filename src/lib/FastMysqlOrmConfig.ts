@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-22 09:10:34
- * @LastEditTime: 2021-01-22 19:10:09
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:21:35
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\FastMysqlOrmConfig.ts
+ * @FilePath: /duckyorm/src/lib/FastMysqlOrmConfig.ts
  */
 
 import { IFastMysqlOrmConfig, SqlExecutedCallBack } from "../types";

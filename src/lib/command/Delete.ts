@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-20 15:52:38
- * @LastEditTime: 2021-01-22 14:19:55
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:23:44
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \ducky.note\FastMysqlOrm\FastMysqlDelete.js
+ * @FilePath: /duckyorm/src/lib/command/Delete.ts
  */
 
 import { IFastMysqlOrmModel, IDelete } from "../../types";

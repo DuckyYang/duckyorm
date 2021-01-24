@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-20 15:58:44
- * @LastEditTime: 2021-01-22 15:49:51
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:35:18
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \ducky.note\FastMysqlOrm\Command\Table.js
+ * @FilePath: /duckyorm/src/lib/command/Table.ts
  */
 
 import DbType from "../DbType";

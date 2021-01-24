@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-20 15:39:31
- * @LastEditTime: 2021-01-22 13:38:01
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:37:22
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \ducky.note\FastMysqlOrm\FastMysqlUpdate.js
+ * @FilePath: /duckyorm/src/lib/command/Update.ts
  */
 import { IFastMysqlOrmModel, IUpdate } from "../../types";
 
@@ -18,7 +18,7 @@ class FastMysqlUpdate implements IUpdate {
   };
   updateValues: Array<any> = [];
   /**
-   * where条件占位符对应的值
+   * where sql placeholder's value
    */
   whereValues: Array<string> = [];
 
@@ -28,9 +28,9 @@ class FastMysqlUpdate implements IUpdate {
   }
 
   /**
-   * 默认update语句不会执行，需强制指定where条件
-   * @param {string} whereString 更新语句的where条件，
-   * @param {Array} whereValues where条件中占位符对应的值
+   * 
+   * @param {string} whereString where sql
+   * @param {Array} whereValues where sql placeholder's value
    */
   where(whereString: string, whereValues: Array<string>) {
     this.updateExpression.where = whereString;
@@ -38,7 +38,8 @@ class FastMysqlUpdate implements IUpdate {
     return this;
   }
   /**
-   * @param {object} value 更新的对象
+   * set update value
+   * @param {object} value 
    */
   setColumns(value: object) {
     let updateArr = [],
@@ -58,6 +59,9 @@ class FastMysqlUpdate implements IUpdate {
     this.updateValues = valueArr;
     return this;
   }
+  /**
+   * exec sql
+   */
   async exec() {
     return new Promise((resolve, reject) => {
       const sql = `${this.updateExpression.update} SET ${this.updateExpression.updateColumns} WHERE ${this.updateExpression.where};`;

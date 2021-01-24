@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-22 08:51:18
- * @LastEditTime: 2021-01-22 15:48:37
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:21:08
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\FastMysqlOrmModelDefine.ts
+ * @FilePath: /duckyorm/src/lib/FastMysqlOrmModelDefine.ts
  */
 
 import DbType from "./DbType";
@@ -18,31 +18,24 @@ class FastMysqlOrmModelDefine implements IFastMysqlOrmModelDefine {
   size: number;
   scale: number;
   nullable: boolean;
-  primaryKey: boolean;
-  increment: boolean;
+  primaryKey: boolean = false;
+  increment: boolean = false;
   default: string;
-  charset: string;
+  charset: string = "utf8";
   useCurrentTimestamp: boolean;
-  ignore: boolean;
-  ignoreInsert: boolean;
-  ignoreSelect: boolean;
-  ignoreUpdate: boolean;
+  ignore: boolean = false;
+  ignoreInsert: boolean = false;
+  ignoreSelect: boolean = false;
+  ignoreUpdate: boolean = false;
   constructor(
     propName: string,
     colName: string,
     dbType: DbType,
-    ignoreSelect?:boolean,
-    ignoreInsert?: boolean,
-    ignoreUpdate?:boolean,
-    ignore?: boolean,
     defaultVal?: string,
     size?: number,
+    nullable?: boolean,
     scale?: number,
-    nullable?:boolean,
-    primaryKey?: boolean,
-    increment?: boolean,
-    charset?: string,
-    useCurrentTimestamp?:boolean
+    useCurrentTimestamp?: boolean
   ) {
     this.propName = propName;
     this.colName = colName;
@@ -50,15 +43,29 @@ class FastMysqlOrmModelDefine implements IFastMysqlOrmModelDefine {
     this.size = size || 255;
     this.scale = scale || 2;
     this.nullable = nullable || false;
+    this.default = defaultVal || "";
+    this.useCurrentTimestamp = useCurrentTimestamp || false;
+  }
+  setIgnore(
+    ignore: boolean,
+    ignoreSelect: boolean,
+    ignoreInsert: boolean,
+    ignoreUpdate: boolean
+  ) {
+    this.ignore = ignore || false;
+    this.ignoreSelect = ignoreSelect || false;
+    this.ignoreInsert = ignoreInsert || false;
+    this.ignoreUpdate = ignoreUpdate || false;
+    return this;
+  }
+  setPrimaryKey(primaryKey: boolean, increment: boolean) {
     this.primaryKey = primaryKey || false;
     this.increment = increment || false;
-    this.default = defaultVal || "";
+    return this;
+  }
+  setCharset(charset: string) {
     this.charset = charset || "utf8";
-    this.useCurrentTimestamp = useCurrentTimestamp || false;
-    this.ignore = ignore || false;
-    this.ignoreInsert = ignoreInsert || false;
-    this.ignoreSelect = ignoreSelect || false;
-    this.ignoreUpdate = ignoreUpdate || false;
+    return this;
   }
 }
 

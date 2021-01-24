@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-22 10:42:31
- * @LastEditTime: 2021-01-22 10:42:39
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:23:34
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\DbType.ts
+ * @FilePath: /duckyorm/src/lib/DbType.ts
  */
 
 enum DbType {

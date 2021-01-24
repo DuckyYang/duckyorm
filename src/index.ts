@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-22 13:14:28
- * @LastEditTime: 2021-01-22 15:11:39
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:20:53
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\src\index.ts
+ * @FilePath: /duckyorm/src/index.ts
  */
 
 import * as Types from "./types";

@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-19 09:56:09
- * @LastEditTime: 2021-01-22 19:14:15
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:21:54
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: /ducky.note/core/FastMysql.js
+ * @FilePath: /duckyorm/src/lib/FastMysqlOrm.ts
  */
 
 import mysql from "mysql";
@@ -14,7 +14,6 @@ import {
   IFastMysqlOrm,
   IFastMysqlOrmConfig,
   IFastMysqlOrmModelDefine,
-  SqlExecutedCallBack,
 } from "../types";
 import FastMysqlOrmModel from "./FastMysqlOrmModel";
 

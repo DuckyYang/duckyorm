@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-20 13:26:36
- * @LastEditTime: 2021-01-22 19:14:53
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:21:21
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \ducky.note\FastMysqlOrm\FastMysqlOrmModel.js
+ * @FilePath: /duckyorm/src/lib/FastMysqlOrmModel.ts
  */
 
 import FastMysqlQuery from "./command/Query";
@@ -58,7 +58,7 @@ class FastMysqlOrmModel implements IFastMysqlOrmModel {
     return new Promise((resolve, reject) => {
       if (!this.fmo.connection) {
         reject(
-          "mysql.Connection is not inititalized,please call FastMysqlOrm.open to init"
+          "mysql.Connection is not initialized,please call FastMysqlOrm.open to init"
         );
         return;
       }
@@ -82,7 +82,7 @@ class FastMysqlOrmModel implements IFastMysqlOrmModel {
     return new Promise((resolve, reject) => {
       if (!this.fmo.connection) {
         reject(
-          "mysql.Connection is not inititalized,please call FastMysqlOrm.open to init"
+          "mysql.Connection is not initialized,please call FastMysqlOrm.open to init"
         );
         return;
       }

@@ -1,10 +1,10 @@
 /*
- * @Author: your name
+ * @Author: Ducky Yang
  * @Date: 2021-01-22 13:14:36
- * @LastEditTime: 2021-01-22 19:14:39
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-01-24 09:38:46
+ * @LastEditors: Ducky
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\src\interface.ts
+ * @FilePath: /duckyorm/src/types.ts
  */
 
 import mysql from "mysql";
@@ -29,7 +29,7 @@ export interface IFastMysqlOrmConfig {
 
 export interface IFastMysqlOrm {
   /**
-   * 
+   *
    */
   config: IFastMysqlOrmConfig;
   /**
@@ -50,7 +50,11 @@ export interface IFastMysqlOrm {
    * @param tableName db table name
    * @param modelDefines model prop and column mapping define
    */
-  defineModel(modelName: string, tableName: string, modelDefines: Array<IFastMysqlOrmModelDefine>): IFastMysqlOrmModel;
+  defineModel(
+    modelName: string,
+    tableName: string,
+    modelDefines: Array<IFastMysqlOrmModelDefine>
+  ): IFastMysqlOrmModel;
   /**
    * get defined model by name
    * @param modelName define model name
@@ -182,6 +186,33 @@ export interface IFastMysqlOrmModelDefine {
    * ignore update command
    */
   ignoreUpdate: boolean;
+  /**
+   * set ignore commands
+   * @param ignore if ignore all commands
+   * @param ignoreSelect if only ignore select
+   * @param ignoreInsert if only ignore insert
+   * @param ignoreUpdate if only ignore update
+   */
+  setIgnore(
+    ignore: boolean,
+    ignoreSelect: boolean,
+    ignoreInsert: boolean,
+    ignoreUpdate: boolean
+  ): IFastMysqlOrmModelDefine;
+  /**
+   *
+   * @param primaryKey if is primary key
+   * @param increment if is auto increment
+   */
+  setPrimaryKey(
+    primaryKey: boolean,
+    increment: boolean
+  ): IFastMysqlOrmModelDefine;
+  /**
+   *
+   * @param charset set column charset
+   */
+  setCharset(charset: string): IFastMysqlOrmModelDefine;
 }
 
 export interface IDelete {
@@ -241,10 +272,10 @@ export interface IQuery {
   list(): Promise<any>;
   /**
    * query paged records, default pageNo is 1, default pageSize is 12;
-   * @param pageNo page index
-   * @param pageSize page size
+   * @param pageNo page index default 1
+   * @param pageSize page size default 12
    */
-  page(pageNo: number, pageSize: number): Promise<any>;
+  page(pageNo: number, pageSize?: number): Promise<any>;
 }
 
 export interface ITable {
@@ -266,7 +297,7 @@ export interface IUpdate {
   /**
    * set update where expression
    * @param whereString where sql expression, such as 'id=? and name=?'
-   * @param whereValues where sql parameter placeholders value
+   * @param whereValues where sql parameter placeholder's value
    */
   where(whereString: string, whereValues: Array<string>): IUpdate;
   /**
@@ -276,6 +307,8 @@ export interface IUpdate {
   setColumns(value: object): IUpdate;
   /**
    * exec update command
+   * Default update will not executed if not set where expression, 
+   * so please set where before exec.
    */
   exec(): Promise<any>;
 }

@@ -1,34 +1,35 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-19 09:56:09
- * @LastEditTime: 2021-01-24 09:21:54
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-25 17:47:25
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: /duckyorm/src/lib/FastMysqlOrm.ts
+ * @FilePath: \FastMysqlOrm\src\lib\DuckyOrm.ts
  */
 
 import mysql from "mysql";
 import {
-  IFastMysqlOrmModel,
-  IFastMysqlOrmModelDefineCache,
-  IFastMysqlOrm,
-  IFastMysqlOrmConfig,
-  IFastMysqlOrmModelDefine,
+  IDuckyOrmModel,
+  IDuckyOrmModelDefineCache,
+  IDuckyOrm,
+  IDuckyOrmConfig,
+  IDuckyOrmModelDefine,
 } from "../types";
-import FastMysqlOrmModel from "./FastMysqlOrmModel";
+import DuckyOrmError from "./DuckyOrmError";
+import DuckyOrmModel from "./model/DuckyOrmModel";
 
-class FastMysqlOrmModelDefineCache implements IFastMysqlOrmModelDefineCache {
+class DuckyOrmModelDefineCache implements IDuckyOrmModelDefineCache {
   name: string;
-  model: IFastMysqlOrmModel;
-  constructor(name: string, model: IFastMysqlOrmModel) {
+  model: IDuckyOrmModel;
+  constructor(name: string, model: IDuckyOrmModel) {
     this.name = name;
     this.model = model;
   }
 }
 
-class FastMysqlOrm implements IFastMysqlOrm {
+class DuckyOrm implements IDuckyOrm {
   
-  config: IFastMysqlOrmConfig;
+  config: IDuckyOrmConfig;
   /**
    * @type {mysql.Connection}
    */
@@ -36,15 +37,15 @@ class FastMysqlOrm implements IFastMysqlOrm {
   /**
    *
    */
-  modelDefineCache: Array<IFastMysqlOrmModelDefineCache> = [];
+  modelDefineCache: Array<IDuckyOrmModelDefineCache> = [];
 
-  constructor(config: IFastMysqlOrmConfig) {
+  constructor(config: IDuckyOrmConfig) {
     if (!config) {
-      throw new Error("FastMysql need config to initialize");
+      throw new DuckyOrmError("DuckyOrm need config to connect");
     }
     this.config = config;
   }
-  open() {
+  connect() {
     return new Promise<mysql.Connection>((resolve, reject) => {
       try {
         const connection = mysql.createConnection({
@@ -73,16 +74,16 @@ class FastMysqlOrm implements IFastMysqlOrm {
   defineModel(
     modelName: string,
     tableName: string,
-    modelDefines: Array<IFastMysqlOrmModelDefine>
+    modelDefines: Array<IDuckyOrmModelDefine>
   ) {
     let modelCache = this.modelDefineCache.find((x) => x.name === modelName);
     if (!modelCache) {
-      const model: IFastMysqlOrmModel = new FastMysqlOrmModel(
+      const model: IDuckyOrmModel = new DuckyOrmModel(
         this,
         tableName,
         modelDefines
       );
-      modelCache = new FastMysqlOrmModelDefineCache(modelName, model);
+      modelCache = new DuckyOrmModelDefineCache(modelName, model);
       this.modelDefineCache.push(modelCache);
     }
     return modelCache.model;
@@ -91,7 +92,7 @@ class FastMysqlOrm implements IFastMysqlOrm {
    *
    * @param {*} modelName
    */
-  getModel(modelName: string): IFastMysqlOrmModel | null {
+  getModel(modelName: string): IDuckyOrmModel | null {
     var cache = this.modelDefineCache.find((x) => x.name === modelName);
     if (cache) {
       return cache.model;
@@ -100,4 +101,4 @@ class FastMysqlOrm implements IFastMysqlOrm {
   }
 }
 
-export default FastMysqlOrm;
+export default DuckyOrm;

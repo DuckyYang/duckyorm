@@ -1,19 +1,20 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-22 13:14:36
- * @LastEditTime: 2021-01-25 12:28:53
+ * @LastEditTime: 2021-01-25 17:51:56
  * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: /duckyorm/src/types.ts
+ * @FilePath: \FastMysqlOrm\src\types.ts
  */
 
 import mysql from "mysql";
-import DbType from "./lib/DbType";
+import DbType from "./lib/enum/DbType";
 import { CommandType } from ".";
+import LogicType from "./lib/enum/LogicType";
 
 export type SqlExecutedCallBack = (sql: string, obj?: any) => void;
 
-export interface IFastMysqlOrmConfig {
+export interface IDuckyOrmConfig {
   host: string;
   port: number;
   username: string;
@@ -21,18 +22,16 @@ export interface IFastMysqlOrmConfig {
   database: string;
   charset: string;
   timeout: number;
-  errorHandler(error: string): void;
   aop: {
     beforeExecute: SqlExecutedCallBack;
-    afterExecute: SqlExecutedCallBack;
   };
 }
 
-export interface IFastMysqlOrm {
+export interface IDuckyOrm {
   /**
    *
    */
-  config: IFastMysqlOrmConfig;
+  config: IDuckyOrmConfig;
   /**
    * @type {mysql.Connection}
    */
@@ -40,11 +39,11 @@ export interface IFastMysqlOrm {
   /**
    *
    */
-  modelDefineCache: Array<IFastMysqlOrmModelDefineCache>;
+  modelDefineCache: Array<IDuckyOrmModelDefineCache>;
   /**
-   * open db connection
+   * connect to mysql db
    */
-  open(): Promise<mysql.Connection>;
+  connect(): Promise<mysql.Connection>;
   /**
    * define a model mapping to db table
    * @param modelName model name
@@ -54,20 +53,20 @@ export interface IFastMysqlOrm {
   defineModel(
     modelName: string,
     tableName: string,
-    modelDefines: Array<IFastMysqlOrmModelDefine>
-  ): IFastMysqlOrmModel;
+    modelDefines: Array<IDuckyOrmModelDefine>
+  ): IDuckyOrmModel;
   /**
    * get defined model by name
    * @param modelName define model name
    */
-  getModel(modelName: string): IFastMysqlOrmModel | null;
+  getModel(modelName: string): IDuckyOrmModel | null;
 }
-export interface IFastMysqlOrmModelDefineCache {
+export interface IDuckyOrmModelDefineCache {
   name: string;
-  model: IFastMysqlOrmModel;
+  model: IDuckyOrmModel;
 }
 
-export interface IFastMysqlOrmModel {
+export interface IDuckyOrmModel {
   /**
    * table name mapping to model
    */
@@ -75,20 +74,20 @@ export interface IFastMysqlOrmModel {
   /**
    * model column mapping defines
    */
-  modelDefines: Array<IFastMysqlOrmModelDefine>;
+  modelDefines: Array<IDuckyOrmModelDefine>;
   /**
    * column and property is not equal
    */
-  diffPropColMapping: Array<IFastMysqlOrmModelDefine>;
+  diffPropColMapping: Array<IDuckyOrmModelDefine>;
   /**
-   * FastMysqlOrm instance
+   * DuckyOrm instance
    */
-  fmo: IFastMysqlOrm;
+  orm: IDuckyOrm;
   /**
-   * reset FastMysqlOrm instance
-   * @param fmo FastMysqlOrm instance
+   * reset DuckyOrm instance
+   * @param fmo DuckyOrm instance
    */
-  use(fmo: IFastMysqlOrm): void;
+  use(fmo: IDuckyOrm): void;
   /**
    * execute sql
    * @param sql full sql to be executed
@@ -126,7 +125,7 @@ export interface IFastMysqlOrmModel {
   table(): ITable;
 }
 
-export interface IFastMysqlOrmModelDefine {
+export interface IDuckyOrmModelDefine {
   /**
    * model's property name
    */
@@ -162,19 +161,11 @@ export interface IFastMysqlOrmModelDefine {
   /**
    * column default value
    */
-  default: string;
-  /**
-   * column charset, default is utf8
-   */
-  charset: string;
+  default: string|number;
   /**
    * column's type is timestamp using CURRENT_TIMESTAMP
    */
   useCurrentTimestamp: boolean;
-  /**
-   * ignore all command
-   */
-  ignore: boolean;
   /**
    * ignore insert command
    */
@@ -189,40 +180,36 @@ export interface IFastMysqlOrmModelDefine {
   ignoreUpdate: boolean;
   /**
    * set ignore commands
-   * @param ignore if ignore all commands
    * @param ignoreSelect if only ignore select
    * @param ignoreInsert if only ignore insert
    * @param ignoreUpdate if only ignore update
    */
-  setIgnore(
-    ignore: boolean,
+  ignore(
     ignoreSelect: boolean,
     ignoreInsert: boolean,
     ignoreUpdate: boolean
-  ): IFastMysqlOrmModelDefine;
+  ): IDuckyOrmModelDefine;
   /**
-   *
+   * if increment is true, this column must be primary key
    * @param primaryKey if is primary key
    * @param increment if is auto increment
    */
-  setPrimaryKey(
-    primaryKey: boolean,
-    increment: boolean
-  ): IFastMysqlOrmModelDefine;
-  /**
-   *
-   * @param charset set column charset
-   */
-  setCharset(charset: string): IFastMysqlOrmModelDefine;
+  setPrimaryKey(primaryKey: boolean, increment: boolean): IDuckyOrmModelDefine;
 }
 
 export interface IDelete {
   /**
-   * set delete where expression
-   * @param whereString where sql expression, such as 'id=? and name=?'
-   * @param whereValues where sql parameter placeholders value
+   * set where expression for query
+   * @param where where model
    */
-  where(whereString: string, whereValues: Array<string>): IDelete;
+  where(where: IDuckyOrmWhereModel): IDelete;
+ /**
+  * fmom.Query().where([{propName:"id",value:[1,2,3], commandType: CommandType.IN}, {propName:"name",value:"Ducky", commandType: CommandType.lk}], LogicType.OR);
+  * it will be "SELECT `id`, `name` FROM `user` WHERE id in (1,2,3) OR name like '%Ducky%'"
+  * @param where where model array. It is 'AND' logic between array.
+  * @param logicType logic type for array
+  */
+  where(where: Array<IDuckyOrmWhereModel>, logicType?: LogicType): IDelete;
   /**
    * exec delete command
    */
@@ -248,11 +235,17 @@ export interface IInsert {
 
 export interface IQuery {
   /**
-   * set query where expression, column must be db column,not property name
-   * @param whereString where sql expression, such as 'id=? and name=?'
-   * @param whereValues where sql parameter placeholders value
+   * set where expression for query
+   * @param where where model
    */
-  where(whereString: string, whereValues: Array<string>): IQuery;
+  where(where: IDuckyOrmWhereModel): IQuery;
+ /**
+  * fmom.Query().where([{propName:"id",value:[1,2,3], commandType: CommandType.IN}, {propName:"name",value:"Ducky", commandType: CommandType.lk}], LogicType.OR);
+  * it will be "SELECT `id`, `name` FROM `user` WHERE id in (1,2,3) OR name like '%Ducky%'"
+  * @param where where model array. It is 'AND' logic between array.
+  * @param logicType logic type for array
+  */
+  where(where: Array<IDuckyOrmWhereModel>, logicType?: LogicType): IQuery;
   /**
    * point query columns name. If columns is object, the object value will be used as column alias name
    * @param columns
@@ -295,12 +288,18 @@ export interface ITable {
 }
 
 export interface IUpdate {
-  /**
-   * set update where expression
-   * @param whereString where sql expression, such as 'id=? and name=?'
-   * @param whereValues where sql parameter placeholder's value
+   /**
+   * set where expression for query
+   * @param where where model
    */
-  where(whereString: string, whereValues: Array<string>): IUpdate;
+  where(where: IDuckyOrmWhereModel): IUpdate;
+ /**
+  * fmom.Query().where([{propName:"id",value:[1,2,3], commandType: CommandType.IN}, {propName:"name",value:"Ducky", commandType: CommandType.lk}], LogicType.OR);
+  * it will be "SELECT `id`, `name` FROM `user` WHERE id in (1,2,3) OR name like '%Ducky%'"
+  * @param where where model array. It is 'AND' logic between array.
+  * @param logicType logic type for array
+  */
+  where(where: Array<IDuckyOrmWhereModel>, logicType?: LogicType): IUpdate;
   /**
    * set update columns and value
    * @param value eg: {name:"Ducky", age:18}
@@ -308,17 +307,23 @@ export interface IUpdate {
   setColumns(value: object): IUpdate;
   /**
    * exec update command
-   * Default update will not executed if not set where expression, 
+   * Default update will not executed if not set where expression,
    * so please set where before exec.
    */
   exec(): Promise<any>;
 }
 
-export interface IFastMysqlOrmWhere {
+export interface IDuckyOrmWhereModel {
   /**
-     * 
-     * @param propName property name
-     * @param value property value
-     */
-    where(propName: string, value:any, commandType: CommandType): IFastMysqlOrmWhere;
+   * property name
+   */
+  propName: string;
+  /**
+   * property value
+   */
+  value: string | number | Array<string | number>;
+  /**
+   * command type
+   */
+  commandType: CommandType;
 }

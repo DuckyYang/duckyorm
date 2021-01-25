@@ -1,40 +1,30 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-20 15:52:38
- * @LastEditTime: 2021-01-24 09:23:44
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-25 17:42:49
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: /duckyorm/src/lib/command/Delete.ts
+ * @FilePath: \FastMysqlOrm\src\lib\command\Delete.ts
  */
 
-import { IFastMysqlOrmModel, IDelete } from "../../types";
+import { IDuckyOrmModel, IDelete } from "../../types";
+import DuckyOrmWhere from "./Where";
 
-class FastMysqlDelete implements IDelete {
-  fmom: IFastMysqlOrmModel;
-  deleteExpression = {
-    where: "",
-  };
-  whereValues: Array<string>;
-  constructor(fmom: IFastMysqlOrmModel) {
-    this.fmom = fmom;
-
-    this.whereValues = [];
+class DuckyOrmDelete extends DuckyOrmWhere implements IDelete {
+  dom: IDuckyOrmModel;
+ 
+  constructor(dom: IDuckyOrmModel) {
+    super(dom);
+    this.dom = dom;
   }
-
-  where(whereString: string, whereValues: Array<string>) {
-    this.deleteExpression.where = whereString;
-    this.whereValues = whereValues;
-    return this;
-  }
-
   async exec() {
     return new Promise((resolve, reject) => {
-      const sql = `DELETE FROM \`${this.fmom.tableName}\` WHERE ${this.deleteExpression.where};`;
-      this.fmom
+      const sql = `DELETE FROM \`${this.dom.tableName}\` WHERE ${this.whereExpression};`;
+      this.dom
         .executeWithParams(sql, this.whereValues)
         .then(resolve)
         .catch(reject);
     });
   }
 }
-export default FastMysqlDelete;
+export default DuckyOrmDelete;

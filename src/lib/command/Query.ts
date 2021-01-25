@@ -1,60 +1,43 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-20 13:21:26
- * @LastEditTime: 2021-01-24 09:34:31
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-25 17:42:26
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: /duckyorm/src/lib/command/Query.ts
+ * @FilePath: \FastMysqlOrm\src\lib\command\Query.ts
  */
 
-import {
-  IFastMysqlOrmModel,
-  IQuery,
-  IFastMysqlOrmModelDefine,
-} from "../../types";
+import { IDuckyOrmModel, IQuery, IDuckyOrmModelDefine } from "../../types";
+import DuckyOrmError from "../DuckyOrmError";
+import DuckyOrmWhere from "./Where";
 
-class FastMysqlQuery implements IQuery {
-  fmom: IFastMysqlOrmModel;
+class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
+  dom: IDuckyOrmModel;
   queryExpression = {
     select: "",
     from: "",
-    where: "",
     order: "",
   };
-  /**
-   * where sql placeholder's value
-   */
-  whereValues: Array<string> = [];
-  constructor(fmom: IFastMysqlOrmModel) {
-    this.fmom = fmom;
+  constructor(dom: IDuckyOrmModel) {
+    super(dom);
+    this.dom = dom;
 
-    this.queryExpression.from = `FROM \`${this.fmom.tableName}\``;
+    this.queryExpression.from = `FROM \`${this.dom.tableName}\``;
   }
-  /**
-   *
-   * @param {string} whereString
-   * @param {Array<string>} whereValues
-   */
-  where(whereString: string, whereValues: Array<string>) {
-    if (whereString) {
-      this.queryExpression.where = "WHERE " + whereString;
-    }
-    this.whereValues = whereValues;
-    return this;
-  }
+
   /**
    * set query columns
    * @param {any} columns array or object.If is object like {name:"userName"}，
    * it will generate sql like 'SELECT name as userName FROM XXX;'
    */
   select(columns: object | Array<string>) {
-    const modelDefines = this.fmom.modelDefines;
+    const modelDefines = this.dom.modelDefines;
     // if columns is empty, it will use defines
     let arr = [];
     if (!columns || (Array.isArray(columns) && columns.length === 0)) {
       for (let index = 0; index < modelDefines.length; index++) {
         const modelDefine = modelDefines[index];
-        if (!modelDefine.ignore && !modelDefine.ignoreSelect) {
+        if (!modelDefine.ignoreSelect) {
           arr.push("`" + modelDefine.colName + "`");
         }
       }
@@ -63,7 +46,7 @@ class FastMysqlQuery implements IQuery {
         for (let index = 0; index < columns.length; index++) {
           const colName = columns[index];
           const modelDefine = modelDefines.find((x) => x.colName === colName);
-          if (modelDefine && !modelDefine.ignore && !modelDefine.ignoreSelect) {
+          if (modelDefine && !modelDefine.ignoreSelect) {
             arr.push("`" + modelDefine.colName + "`");
           }
         }
@@ -73,11 +56,7 @@ class FastMysqlQuery implements IQuery {
           if (Object.hasOwnProperty.call(columns, key)) {
             const alias = columns[key];
             const modelDefine = modelDefines.find((x) => x.colName === key);
-            if (
-              modelDefine &&
-              !modelDefine.ignore &&
-              !modelDefine.ignoreSelect
-            ) {
+            if (modelDefine && !modelDefine.ignoreSelect) {
               arr.push("`" + modelDefine.colName + "` AS `" + alias + "`");
             }
           }
@@ -85,13 +64,13 @@ class FastMysqlQuery implements IQuery {
       }
     }
     if (arr.length === 0) {
-      throw new Error("no select columns");
+      throw new DuckyOrmError("no select columns");
     }
     this.queryExpression.select = `SELECT ${arr.join(",")}`;
     return this;
   }
   /**
-   * set query order 
+   * set query order
    * @param {Array<Array<string>>} order eg: [["id","asc"],["age","desc"]]
    * sql is 'order by id asc, age desc'
    */
@@ -108,7 +87,10 @@ class FastMysqlQuery implements IQuery {
             (orderType.toLowerCase() === "asc" ||
               orderType.toLowerCase() === "desc")
           ) {
-            arr.push(`${field} ${orderType}`);
+            const model = this.dom.modelDefines.find(
+              (x) => x.propName === field
+            );
+            arr.push(`${model?.colName || field} ${orderType}`);
           }
         }
       }
@@ -124,10 +106,14 @@ class FastMysqlQuery implements IQuery {
       if (!this.queryExpression.select) {
         this.select([]);
       }
-      const sql = `${this.queryExpression.select} ${this.queryExpression.from} ${this.queryExpression.where} ${this.queryExpression.order} LIMIT 1;`;
+      const sql = `${this.queryExpression.select} ${
+        this.queryExpression.from
+      } ${this.whereExpression ? "WHERE " + this.whereExpression : ""} ${
+        this.queryExpression.order
+      } LIMIT 1;`;
       try {
-        let results = await this.fmom.executeWithParams(sql, this.whereValues);
-        const models = _mapToModel(this.fmom.diffPropColMapping, results);
+        let results = await this.dom.executeWithParams(sql, this.whereValues);
+        const models = _mapToModel(this.dom.diffPropColMapping, results);
         if (models && models.length > 0) {
           resolve(models[0]);
         } else {
@@ -146,16 +132,22 @@ class FastMysqlQuery implements IQuery {
       if (!this.queryExpression.select) {
         this.select([]);
       }
-      const sql = `${this.queryExpression.select} ${this.queryExpression.from} ${this.queryExpression.where} ${this.queryExpression.order};`;
-      const totalSql = `SELECT COUNT(1) AS total ${this.queryExpression.from} ${this.queryExpression.where};`;
+      const sql = `${this.queryExpression.select} ${
+        this.queryExpression.from
+      } ${this.whereExpression ? "WHERE " + this.whereExpression : ""} ${
+        this.queryExpression.order
+      };`;
+      const totalSql = `SELECT COUNT(1) AS total ${
+        this.queryExpression.from
+      }  ${this.whereExpression ? "WHERE " + this.whereExpression : ""};`;
       try {
-        let results = await this.fmom.executeWithParams(sql, this.whereValues);
-        let total = await this.fmom.executeWithParams(
+        let results = await this.dom.executeWithParams(sql, this.whereValues);
+        let total = await this.dom.executeWithParams(
           totalSql,
           this.whereValues
         );
 
-        const models = _mapToModel(this.fmom.diffPropColMapping, results);
+        const models = _mapToModel(this.dom.diffPropColMapping, results);
         resolve([models, total[0].total]);
       } catch (error) {
         reject(error);
@@ -180,21 +172,23 @@ class FastMysqlQuery implements IQuery {
       }
       const pageSql = `${this.queryExpression.select} ${
         this.queryExpression.from
-      } ${this.queryExpression.where} ${this.queryExpression.order} LIMIT ${
-        (pageNo - 1) * pageSize
-      }, ${pageSize};`;
+      }  ${this.whereExpression ? "WHERE " + this.whereExpression : ""} ${
+        this.queryExpression.order
+      } LIMIT ${(pageNo - 1) * pageSize}, ${pageSize};`;
 
-      const totalSql = `SELECT COUNT(1) AS total ${this.queryExpression.from} ${this.queryExpression.where};`;
+      const totalSql = `SELECT COUNT(1) AS total ${this.queryExpression.from} ${
+        this.whereExpression ? "WHERE " + this.whereExpression : ""
+      };`;
       try {
-        let results = await this.fmom.executeWithParams(
+        let results = await this.dom.executeWithParams(
           pageSql,
           this.whereValues
         );
-        let total = await this.fmom.executeWithParams(
+        let total = await this.dom.executeWithParams(
           totalSql,
           this.whereValues
         );
-        const models = _mapToModel(this.fmom.diffPropColMapping, results);
+        const models = _mapToModel(this.dom.diffPropColMapping, results);
         resolve([models, total[0].total]);
       } catch (error) {
         reject(error);
@@ -204,11 +198,11 @@ class FastMysqlQuery implements IQuery {
 }
 /**
  * map query results to define models
- * @param modelDefines 
- * @param results 
+ * @param modelDefines
+ * @param results
  */
 function _mapToModel(
-  modelDefines: Array<IFastMysqlOrmModelDefine>,
+  modelDefines: Array<IDuckyOrmModelDefine>,
   results: any
 ): Array<any> {
   if (results && Array.isArray(results) && results.length > 0) {
@@ -231,4 +225,4 @@ function _mapToModel(
   return results;
 }
 
-export default FastMysqlQuery;
+export default DuckyOrmQuery;

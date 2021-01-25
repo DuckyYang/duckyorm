@@ -1,17 +1,17 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-22 08:51:18
- * @LastEditTime: 2021-01-24 09:21:08
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-25 17:51:05
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: /duckyorm/src/lib/FastMysqlOrmModelDefine.ts
+ * @FilePath: \FastMysqlOrm\src\lib\DuckyOrmModelDefine.ts
  */
 
-import DbType from "./DbType";
+import DbType from "./enum/DbType";
 
-import { IFastMysqlOrmModelDefine } from "../types";
+import { IDuckyOrmModelDefine } from "../types";
 
-class FastMysqlOrmModelDefine implements IFastMysqlOrmModelDefine {
+class DuckyOrmModelDefine implements IDuckyOrmModelDefine {
   propName: string;
   colName: string;
   dbType: DbType;
@@ -20,10 +20,8 @@ class FastMysqlOrmModelDefine implements IFastMysqlOrmModelDefine {
   nullable: boolean;
   primaryKey: boolean = false;
   increment: boolean = false;
-  default: string;
-  charset: string = "utf8";
+  default: string|number;
   useCurrentTimestamp: boolean;
-  ignore: boolean = false;
   ignoreInsert: boolean = false;
   ignoreSelect: boolean = false;
   ignoreUpdate: boolean = false;
@@ -31,10 +29,10 @@ class FastMysqlOrmModelDefine implements IFastMysqlOrmModelDefine {
     propName: string,
     colName: string,
     dbType: DbType,
-    defaultVal?: string,
+    defaultVal?: string|number,
     size?: number,
-    nullable?: boolean,
     scale?: number,
+    nullable?: boolean,
     useCurrentTimestamp?: boolean
   ) {
     this.propName = propName;
@@ -42,17 +40,15 @@ class FastMysqlOrmModelDefine implements IFastMysqlOrmModelDefine {
     this.dbType = dbType || DbType.varchar;
     this.size = size || 255;
     this.scale = scale || 2;
-    this.nullable = nullable || false;
     this.default = defaultVal || "";
+    this.nullable = nullable || false;
     this.useCurrentTimestamp = useCurrentTimestamp || false;
   }
-  setIgnore(
-    ignore: boolean,
+  ignore(
     ignoreSelect: boolean,
     ignoreInsert: boolean,
     ignoreUpdate: boolean
   ) {
-    this.ignore = ignore || false;
     this.ignoreSelect = ignoreSelect || false;
     this.ignoreInsert = ignoreInsert || false;
     this.ignoreUpdate = ignoreUpdate || false;
@@ -61,12 +57,11 @@ class FastMysqlOrmModelDefine implements IFastMysqlOrmModelDefine {
   setPrimaryKey(primaryKey: boolean, increment: boolean) {
     this.primaryKey = primaryKey || false;
     this.increment = increment || false;
-    return this;
-  }
-  setCharset(charset: string) {
-    this.charset = charset || "utf8";
+    if (increment) {
+      this.primaryKey = true;
+    }
     return this;
   }
 }
 
-export default FastMysqlOrmModelDefine;
+export default DuckyOrmModelDefine;

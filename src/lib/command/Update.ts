@@ -1,42 +1,30 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-20 15:39:31
- * @LastEditTime: 2021-01-24 09:37:22
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-25 17:43:06
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: /duckyorm/src/lib/command/Update.ts
+ * @FilePath: \FastMysqlOrm\src\lib\command\Update.ts
  */
-import { IFastMysqlOrmModel, IUpdate } from "../../types";
+import { IDuckyOrmModel, IUpdate } from "../../types";
+import DuckyOrmWhere from "./Where";
 
-class FastMysqlUpdate implements IUpdate {
-  fmom: IFastMysqlOrmModel;
+class DuckyOrmUpdate extends DuckyOrmWhere implements IUpdate {
+  dom: IDuckyOrmModel;
 
   updateExpression = {
     update: "",
-    updateColumns: "",
-    where: "1=0",
+    updateColumns: ""
   };
   updateValues: Array<any> = [];
-  /**
-   * where sql placeholder's value
-   */
-  whereValues: Array<string> = [];
 
-  constructor(fmom: IFastMysqlOrmModel) {
-    this.fmom = fmom;
-    this.updateExpression.update = `UPDATE \`${this.fmom.tableName}\``;
+  constructor(dom: IDuckyOrmModel) {
+    super(dom);
+
+    this.dom = dom;
+    this.updateExpression.update = `UPDATE \`${this.dom.tableName}\``;
   }
 
-  /**
-   * 
-   * @param {string} whereString where sql
-   * @param {Array} whereValues where sql placeholder's value
-   */
-  where(whereString: string, whereValues: Array<string>) {
-    this.updateExpression.where = whereString;
-    this.whereValues = whereValues;
-    return this;
-  }
   /**
    * set update value
    * @param {object} value 
@@ -46,10 +34,10 @@ class FastMysqlUpdate implements IUpdate {
       valueArr = [];
     for (const key in value) {
       if (value.hasOwnProperty(key)) {
-        var modelDefine = this.fmom.modelDefines.find(
+        var modelDefine = this.dom.modelDefines.find(
           (x) => x.propName === key
         );
-        if (modelDefine && !modelDefine.ignore && !modelDefine.ignoreUpdate) {
+        if (modelDefine && !modelDefine.ignoreUpdate) {
           updateArr.push(`${modelDefine.colName}=?`);
           valueArr.push(value[key]);
         }
@@ -64,11 +52,11 @@ class FastMysqlUpdate implements IUpdate {
    */
   async exec() {
     return new Promise((resolve, reject) => {
-      const sql = `${this.updateExpression.update} SET ${this.updateExpression.updateColumns} WHERE ${this.updateExpression.where};`;
+      const sql = `${this.updateExpression.update} SET ${this.updateExpression.updateColumns} WHERE ${this.whereExpression || "1=0"};`;
       const values = this.updateValues.concat(this.whereValues);
 
-      this.fmom.executeWithParams(sql, values).then(resolve).catch(reject);
+      this.dom.executeWithParams(sql, values).then(resolve).catch(reject);
     });
   }
 }
-export default FastMysqlUpdate;
+export default DuckyOrmUpdate;

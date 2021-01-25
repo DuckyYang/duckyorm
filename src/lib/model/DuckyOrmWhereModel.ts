@@ -4,12 +4,12 @@
  * @LastEditTime: 2021-01-25 12:27:30
  * @LastEditors: Ducky Yang
  * @Description: 
- * @FilePath: /duckyorm/src/lib/FastMysqlOrmWhereModel.ts
+ * @FilePath: /duckyorm/src/lib/DuckyOrmWhereModel.ts
  * @
  */ 
-import CommandType from "./CommandType";
+import CommandType from "../enum/CommandType";
 
-class FastMysqlOrmWhereModel {
+class DuckyOrmWhereModel {
     propName: string;
     value: any;
     commandType: CommandType;
@@ -19,4 +19,4 @@ class FastMysqlOrmWhereModel {
         this.commandType = commandType;
     }
 }
-export default FastMysqlOrmWhereModel;
+export default DuckyOrmWhereModel;

@@ -1,10 +1,10 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-24 20:39:08
- * @LastEditTime: 2021-01-24 21:04:22
+ * @LastEditTime: 2021-01-25 13:33:11
  * @LastEditors: Ducky Yang
  * @Description:
- * @FilePath: /duckyorm/src/lib/CommandType.ts
+ * @FilePath: \FastMysqlOrm\src\lib\enum\CommandType.ts
  * @
  */
 

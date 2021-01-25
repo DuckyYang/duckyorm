@@ -1,19 +1,19 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-20 13:53:33
- * @LastEditTime: 2021-01-24 09:25:34
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-25 16:08:10
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: /duckyorm/src/lib/command/Insert.ts
+ * @FilePath: \FastMysqlOrm\src\lib\command\Insert.ts
  */
 import {
-  IFastMysqlOrmModel,
+  IDuckyOrmModel,
   IInsert,
-  IFastMysqlOrmModelDefine,
+  IDuckyOrmModelDefine,
 } from "../../types";
 
-class FastMysqlInsert implements IInsert {
-  fmom: IFastMysqlOrmModel;
+class DuckyOrmInsert implements IInsert {
+  fmom: IDuckyOrmModel;
 
   values: Array<object>;
   /**
@@ -23,9 +23,9 @@ class FastMysqlInsert implements IInsert {
   /**
    * inserted columns model defines
    */
-  columnModels: Array<IFastMysqlOrmModelDefine>;
+  columnModels: Array<IDuckyOrmModelDefine>;
 
-  constructor(fmom: IFastMysqlOrmModel) {
+  constructor(fmom: IDuckyOrmModel) {
     this.fmom = fmom;
     this.values = [];
     this.columnModels = [];
@@ -68,7 +68,6 @@ class FastMysqlInsert implements IInsert {
       const modelDefine = this.fmom.modelDefines[index];
       // if set ignore or is auto increment column
       if (
-        !modelDefine.ignore &&
         !modelDefine.ignoreInsert &&
         !modelDefine.increment
       ) {
@@ -86,15 +85,11 @@ class FastMysqlInsert implements IInsert {
       for (let j = 0; j < this.columnModels.length; j++) {
         const model = this.columnModels[j];
         let val = value[model.propName];
-        if (val) {
-          insertValue.push(val);
-        } else {
-          insertValue.push(model.default || "");
-        }
+        insertValue.push(val);
       }
       insertValues.push(insertValue);
     }
     return insertValues;
   }
 }
-export default FastMysqlInsert;
+export default DuckyOrmInsert;

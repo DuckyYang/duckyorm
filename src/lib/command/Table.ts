@@ -1,20 +1,20 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-20 15:58:44
- * @LastEditTime: 2021-01-24 09:35:18
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-25 15:55:06
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: /duckyorm/src/lib/command/Table.ts
+ * @FilePath: \FastMysqlOrm\src\lib\command\Table.ts
  */
 
-import DbType from "../DbType";
-import { IFastMysqlOrmModel, ITable } from "../../types";
+import DbType from "../enum/DbType";
+import { IDuckyOrmModel, ITable } from "../../types";
 
-class FastMysqlTable implements ITable {
-  fmom: IFastMysqlOrmModel;
-  constructor(fmom: IFastMysqlOrmModel) {
+class DuckyOrmTable implements ITable {
+  fmom: IDuckyOrmModel;
+  constructor(fmom: IDuckyOrmModel) {
     this.fmom = fmom;
-
+ 
     this.prepareColumns();
   }
 
@@ -103,10 +103,6 @@ class FastMysqlTable implements ITable {
       if (model.default) {
         sql += ` DEFAULT ${model.default}`;
       }
-      // 设置字符集
-      if (model.charset) {
-        sql += ` CHARACTER SET ${model.charset}`;
-      }
       if (model.dbType === DbType.timestamp && model.useCurrentTimestamp) {
         sql += ` ON UPDATE CURRENT_TIMESTAMP`;
       }
@@ -123,4 +119,4 @@ class FastMysqlTable implements ITable {
       .catch(() => {});
   }
 }
-export default FastMysqlTable;
+export default DuckyOrmTable;

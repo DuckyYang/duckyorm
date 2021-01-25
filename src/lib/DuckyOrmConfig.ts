@@ -1,15 +1,18 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-22 09:10:34
- * @LastEditTime: 2021-01-24 09:21:35
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-25 17:52:15
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: /duckyorm/src/lib/FastMysqlOrmConfig.ts
+ * @FilePath: \FastMysqlOrm\src\lib\DuckyOrmConfig.ts
  */
 
-import { IFastMysqlOrmConfig, SqlExecutedCallBack } from "../types";
+import {
+  IDuckyOrmConfig,
+  SqlExecutedCallBack,
+} from "../types";
 
-class FastMysqlOrmConfig implements IFastMysqlOrmConfig {
+class DuckyOrmConfig implements IDuckyOrmConfig {
   host: string;
   port: number;
   username: string;
@@ -19,9 +22,7 @@ class FastMysqlOrmConfig implements IFastMysqlOrmConfig {
   timeout: number;
   aop: {
     beforeExecute: SqlExecutedCallBack;
-    afterExecute: SqlExecutedCallBack;
   };
-  errorHandler: (error: string) => void;
   constructor(
     host: string,
     port: number,
@@ -38,12 +39,10 @@ class FastMysqlOrmConfig implements IFastMysqlOrmConfig {
     this.database = database;
     this.charset = charset || "utf8";
     this.timeout = timeout || 15000;
-    this.errorHandler = (error: string) => {};
     this.aop = {
-      beforeExecute() {},
-      afterExecute() {},
+      beforeExecute() {}
     };
   }
 }
 
-export default FastMysqlOrmConfig;
+export default DuckyOrmConfig;

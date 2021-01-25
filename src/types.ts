@@ -1,14 +1,15 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-22 13:14:36
- * @LastEditTime: 2021-01-24 09:38:46
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-25 12:28:53
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
  * @FilePath: /duckyorm/src/types.ts
  */
 
 import mysql from "mysql";
 import DbType from "./lib/DbType";
+import { CommandType } from ".";
 
 export type SqlExecutedCallBack = (sql: string, obj?: any) => void;
 
@@ -247,7 +248,7 @@ export interface IInsert {
 
 export interface IQuery {
   /**
-   * set query where expression
+   * set query where expression, column must be db column,not property name
    * @param whereString where sql expression, such as 'id=? and name=?'
    * @param whereValues where sql parameter placeholders value
    */
@@ -311,4 +312,13 @@ export interface IUpdate {
    * so please set where before exec.
    */
   exec(): Promise<any>;
+}
+
+export interface IFastMysqlOrmWhere {
+  /**
+     * 
+     * @param propName property name
+     * @param value property value
+     */
+    where(propName: string, value:any, commandType: CommandType): IFastMysqlOrmWhere;
 }

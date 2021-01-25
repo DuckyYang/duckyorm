@@ -1,8 +1,8 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-22 13:14:28
- * @LastEditTime: 2021-01-24 09:20:53
- * @LastEditors: Ducky
+ * @LastEditTime: 2021-01-24 20:47:51
+ * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
  * @FilePath: /duckyorm/src/index.ts
  */
@@ -13,6 +13,7 @@ import FastMysqlOrmConfig from "./lib/FastMysqlOrmConfig";
 import FastMysqlOrmModel from "./lib/FastMysqlOrmModel";
 import FastMysqlOrmModelDefine from "./lib/FastMysqlOrmModelDefine";
 import DbType from "./lib/DbType";
+import CommandType from "./lib/CommandType";
 
 export {
   Types,
@@ -20,5 +21,6 @@ export {
   FastMysqlOrmConfig,
   FastMysqlOrmModel,
   FastMysqlOrmModelDefine,
-  DbType
+  DbType,
+  CommandType
 };

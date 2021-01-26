@@ -9,6 +9,8 @@
 
 > This is an ORM framework based on node MySQL development in the process of learning node and typescript. 
 
+> Install: npm install duckyorm
+
 > Tips:
 >
 > If you are willing to give me some advice and suggestions, I would be very grateful!

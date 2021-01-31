@@ -1,18 +1,29 @@
+<!--
+ * @Author: Ducky Yang
+ * @Date: 2021-01-31 11:52:10
+ * @LastEditTime: 2021-01-31 11:52:24
+ * @LastEditors: Ducky Yang
+ * @Description: 
+ * @FilePath: /duckyorm/README.md
+ * @
+--> 
+
 ### DuckyOrm
 
 > nodejs, typescript, mysql, orm
 
-> 作者： Ducky Yang
+> Author: Ducky Yang
 >
-> 邮箱：duckyyang@vip.qq.com
+> Email: duckyyang@vip.qq.com
 
-> 作者本人在学习node与typescript过程中尝试开发的基于node mysql的orm框架。
+> This is an ORM framework based on node MySQL development in the process of learning node and typescript. 
 
-> 安装：npm install duckyorm
+> Install: npm install duckyorm
 
-> Tips：
-> 如果您想指点一下小弟，请在issues中留言，不胜感激！
+> Tips:
 >
-> 如果你想要一款稳定高效的orm框架，您可以再搜一搜其他大牛们的作品
+> If you are willing to give me some advice and suggestions, I would be very grateful!
 >
-> 谢谢！
+> If you want to find a stable and efficient orm framework, please try to find others.
+>
+> Thanks

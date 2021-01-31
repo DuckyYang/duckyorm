@@ -1,10 +1,10 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-25 13:26:50
- * @LastEditTime: 2021-01-25 17:43:22
+ * @LastEditTime: 2021-01-31 11:43:49
  * @LastEditors: Ducky Yang
  * @Description:
- * @FilePath: \FastMysqlOrm\src\lib\command\where.ts
+ * @FilePath: /duckyorm/src/lib/command/Where.ts
  */
 
 import { CommandType } from "../..";
@@ -141,7 +141,7 @@ class DuckyOrmWhere {
       }
       return `(${arr.join(",")})`;
     }
-    return `'${value}'`;
+    return `${value}`;
   }
 }
 

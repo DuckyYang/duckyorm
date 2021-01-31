@@ -1,10 +1,10 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-25 14:12:43
- * @LastEditTime: 2021-01-25 17:55:48
+ * @LastEditTime: 2021-01-31 11:38:15
  * @LastEditors: Ducky Yang
  * @Description:
- * @FilePath: \FastMysqlOrm\test\run.ts
+ * @FilePath: /duckyorm/test/run.ts
  */
 
 import testModelDefine from "./unit/test-model-define";
@@ -20,13 +20,13 @@ import orm from "./util";
   await orm.connect();
   await testModelDefine();
 
-  await testDropTable();
+  // await testDropTable();
 
-  await testCreateTable();
+  // await testCreateTable();
 
-  await testInsert();
+  // await testInsert();
 
-  await testDelete();
+  // await testDelete();
 
-  await testQuery();
+ await testQuery();
 })();

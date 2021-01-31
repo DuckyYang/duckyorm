@@ -1,10 +1,10 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-25 14:30:15
- * @LastEditTime: 2021-01-25 15:55:58
+ * @LastEditTime: 2021-01-31 11:39:11
  * @LastEditors: Ducky Yang
  * @Description:
- * @FilePath: \FastMysqlOrm\test\unit\test-model-define.ts
+ * @FilePath: /duckyorm/test/unit/test-model-define.ts
  */
 
 import { DbType, DuckyOrmModelDefine } from "../../src";
@@ -17,19 +17,17 @@ export default async () => {
       true
     ),
     new DuckyOrmModelDefine("name", "name", DbType.varchar, "", 20),
+    new DuckyOrmModelDefine("status", "status", DbType.tinyint, 1, 1),
     new DuckyOrmModelDefine(
-      "money",
-      "money",
-      DbType.decimal,
-      0,
-      8,
-      2, 
-      false,
+      "email",
+      "email",
+      DbType.varchar,
+      "",
+      18
     ),
-    new DuckyOrmModelDefine("enabled", "enabled", DbType.tinyint, 1, 1),
     new DuckyOrmModelDefine(
-      "mobile",
-      "mobile_phone",
+      "password",
+      "password",
       DbType.varchar,
       "",
       18

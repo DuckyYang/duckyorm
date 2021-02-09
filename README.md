@@ -10,7 +10,7 @@
 
  `npm install duckyorm`
 
-### Tips:
+### Tips
 
 > This is an ORM framework based on node MySQL in the process of learning node and typescript. 
 >
@@ -205,6 +205,8 @@ await DuckyOrm.update(UserClass).set({
 - `count()`: Get records row count.
 
 #### `IWhere`
+
+> IQuery, IUpdate, IDelete extends IWhere to set where condition.
 
 - `where(where: IDuckyOrmWhereModel)`: Set where condition with `AND` command.
 - `where(where: Array<IDuckyOrmWhereModel>, logicType?: LogicType)`: Set where group with `AND` command, and `logicType` indicates the relationship between where group.

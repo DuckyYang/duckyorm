@@ -1,10 +1,10 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-25 13:26:50
- * @LastEditTime: 2021-02-09 15:07:51
+ * @LastEditTime: 2021-02-09 20:33:48
  * @LastEditors: Ducky Yang
  * @Description:
- * @FilePath: \duckyorm\src\lib\command\Where.ts
+ * @FilePath: /duckyorm/src/lib/command/Where.ts
  */
 
 import { CommandType, LogicType } from "../Enum";
@@ -52,7 +52,7 @@ class DuckyOrmWhere implements IWhere {
     this.whereExpression =
       this.whereExpression === ""
         ? `${sql}`
-        : `${this.whereExpression} OR ${sql}`;
+        : `${this.whereExpression} OR (${sql})`;
     return this;
   }
   andOr(
@@ -63,7 +63,7 @@ class DuckyOrmWhere implements IWhere {
     this.whereExpression =
       this.whereExpression === ""
         ? `${sql}`
-        : `((${this.whereExpression}) OR ${sql})`;
+        : `((${this.whereExpression}) OR (${sql}))`;
     return this;
   }
 

@@ -20,6 +20,8 @@
 >
 > Thanks
 
+![DuckyOrm](https://gitee.com/duckyYang/duckyorm/raw/master/IDuckyOrm.png "DuckyOrm")
+
 ## Quick Start
 
 - Define a ORM model

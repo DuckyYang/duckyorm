@@ -1,57 +1,55 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-19 09:56:09
- * @LastEditTime: 2021-01-25 17:47:25
+ * @LastEditTime: 2021-02-09 13:04:29
  * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\src\lib\DuckyOrm.ts
+ * @FilePath: \duckyorm\src\lib\DuckyOrm.ts
  */
 
 import mysql from "mysql";
 import {
   IDuckyOrmModel,
-  IDuckyOrmModelDefineCache,
   IDuckyOrm,
   IDuckyOrmConfig,
-  IDuckyOrmModelDefine,
+  IQuery,
+  IInsert,
+  IUpdate,
+  IDelete,
+  ITable,
 } from "../types";
+import DuckyOrmDelete from "./command/Delete";
+import DuckyOrmInsert from "./command/Insert";
+import DuckyOrmQuery from "./command/Query";
+import DuckyOrmTable from "./command/Table";
+import DuckyOrmUpdate from "./command/Update";
 import DuckyOrmError from "./DuckyOrmError";
-import DuckyOrmModel from "./model/DuckyOrmModel";
-
-class DuckyOrmModelDefineCache implements IDuckyOrmModelDefineCache {
-  name: string;
-  model: IDuckyOrmModel;
-  constructor(name: string, model: IDuckyOrmModel) {
-    this.name = name;
-    this.model = model;
-  }
-}
 
 class DuckyOrm implements IDuckyOrm {
-  
-  config: IDuckyOrmConfig;
+  config!: IDuckyOrmConfig;
   /**
    * @type {mysql.Connection}
    */
   connection!: mysql.Connection;
-  /**
-   *
-   */
-  modelDefineCache: Array<IDuckyOrmModelDefineCache> = [];
 
-  constructor(config: IDuckyOrmConfig) {
-    if (!config) {
-      throw new DuckyOrmError("DuckyOrm need config to connect");
-    }
-    this.config = config;
-  }
-  connect() {
-    return new Promise<mysql.Connection>((resolve, reject) => {
+  models: IDuckyOrmModel[] = [];
+
+  constructor() {}
+  /**
+   * connect to database
+   * @param config db configuration
+   */
+  connect(config: IDuckyOrmConfig) {
+    return new Promise<void>((resolve, reject) => {
       try {
+        if (!config) {
+          throw new DuckyOrmError("DuckyOrm need config to connect");
+        }
+        this.config = config;
         const connection = mysql.createConnection({
           host: this.config.host,
           port: this.config.port,
-          user: this.config.username,
+          user: this.config.user,
           password: this.config.password,
           charset: this.config.charset,
           timeout: this.config.timeout,
@@ -59,46 +57,103 @@ class DuckyOrm implements IDuckyOrm {
           database: this.config.database,
         });
         this.connection = connection;
-        resolve(connection);
+        resolve();
       } catch (error) {
         reject(error);
       }
     });
   }
   /**
-   *
-   * @param {*} modelName
-   * @param {*} tableName
-   * @param {*} modelDefines
+   * registe all models defined
+   * @param {any[]} classes
    */
-  defineModel(
-    modelName: string,
-    tableName: string,
-    modelDefines: Array<IDuckyOrmModelDefine>
-  ) {
-    let modelCache = this.modelDefineCache.find((x) => x.name === modelName);
-    if (!modelCache) {
-      const model: IDuckyOrmModel = new DuckyOrmModel(
-        this,
-        tableName,
-        modelDefines
-      );
-      modelCache = new DuckyOrmModelDefineCache(modelName, model);
-      this.modelDefineCache.push(modelCache);
+  define(classes: any[]): IDuckyOrm {
+    classes.forEach((cls) => {
+      const className = cls.name;
+      let model = this.models.find((x) => x.className === className);
+      if (model) {
+        model.ctor = cls;
+        model.mappingDiff = model.mapping.filter((x) => x.prop !== x.column);
+      }
+    });
+    return this;
+  }
+  get<T>(cls: { new (): T }): IDuckyOrmModel | undefined {
+    return this.models.find((x) => x.className === cls.name);
+  }
+
+  query<T>(cls: { new (): T }): IQuery<T> {
+    const model = this.get<T>(cls);
+    if (model) {
+      return new DuckyOrmQuery<T>(model);
     }
-    return modelCache.model;
+    throw new DuckyOrmError(`${cls.name} is not defined`);
+  }
+
+  insert<T>(cls: { new (): T }): IInsert<T> {
+    const model = this.get<T>(cls);
+    if (model) {
+      return new DuckyOrmInsert<T>(model);
+    }
+    throw new DuckyOrmError(`${cls.name} is not defined`);
+  }
+
+  update<T>(cls: { new (): T }): IUpdate<T> {
+    const model = this.get<T>(cls);
+    if (model) {
+      return new DuckyOrmUpdate<T>(model);
+    }
+    throw new DuckyOrmError(`${cls.name} is not defined`);
+  }
+
+  delete<T>(cls: { new (): T }): IDelete<T> {
+    const model = this.get<T>(cls);
+    if (model) {
+      return new DuckyOrmDelete<T>(model);
+    }
+    throw new DuckyOrmError(`${cls.name} is not defined`);
+  }
+
+  table<T>(cls: { new (): T }): ITable<T> {
+    const model = this.get<T>(cls);
+    if (model) {
+      return new DuckyOrmTable<T>(model);
+    }
+    throw new DuckyOrmError(`${cls.name} is not defined`);
   }
   /**
    *
-   * @param {*} modelName
+   * @param {*} sql
    */
-  getModel(modelName: string): IDuckyOrmModel | null {
-    var cache = this.modelDefineCache.find((x) => x.name === modelName);
-    if (cache) {
-      return cache.model;
-    }
-    return null;
+  execute(sql: string, parameters?: Array<any>): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (!this.connection) {
+        throw new DuckyOrmError(
+          "mysql is not connected,please call DuckyOrm'connect method to connect"
+        );
+      }
+      if (!parameters) {
+        parameters = [];
+      }
+      const safeSql = this.connection.format(sql, parameters);
+      this.config.aop.beforeExecute(safeSql, { sql: sql, values: parameters });
+      this.connection.query(safeSql, (err, results, fields) => {
+        this.config.aop.afterExecute(safeSql, {
+          sql: sql,
+          values: parameters,
+          results: results,
+          fields: fields,
+        });
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(results);
+      });
+    });
   }
 }
 
-export default DuckyOrm;
+const Context = new DuckyOrm();
+
+export default Context;

@@ -1,19 +1,16 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-20 13:53:33
- * @LastEditTime: 2021-01-25 16:08:10
+ * @LastEditTime: 2021-02-09 15:31:58
  * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\src\lib\command\Insert.ts
+ * @FilePath: \duckyorm\src\lib\command\Insert.ts
  */
-import {
-  IDuckyOrmModel,
-  IInsert,
-  IDuckyOrmModelDefine,
-} from "../../types";
+import { IDuckyOrmModel, IDuckyOrmModelMapping, IInsert, IObjectIndex } from "../../types";
+import Context from "../DuckyOrm";
 
-class DuckyOrmInsert implements IInsert {
-  fmom: IDuckyOrmModel;
+class DuckyOrmInsert<T> implements IInsert<T> {
+  dom: IDuckyOrmModel;
 
   values: Array<object>;
   /**
@@ -23,10 +20,10 @@ class DuckyOrmInsert implements IInsert {
   /**
    * inserted columns model defines
    */
-  columnModels: Array<IDuckyOrmModelDefine>;
+  columnModels: Array<IDuckyOrmModelMapping>;
 
-  constructor(fmom: IDuckyOrmModel) {
-    this.fmom = fmom;
+  constructor(dom: IDuckyOrmModel) {
+    this.dom = dom;
     this.values = [];
     this.columnModels = [];
 
@@ -37,42 +34,32 @@ class DuckyOrmInsert implements IInsert {
    * insert single value
    * @param {object} value
    */
-  setValue(value: object) {
-    this.values.push(value);
+  set(value: object | Array<object>) {
+    if (Array.isArray(value)) {
+      this.values = value;
+    } else {
+      this.values.push(value);
+    }
     return this;
   }
   /**
-   * insert multiple values
-   * @param {Array<object>} values
+   * exec sql
    */
-  setValues(values: Array<object>) {
-    this.values = values;
-    return this;
-  }
-/**
- * exec sql
- */
   async exec() {
     return new Promise((resolve, reject) => {
-      const sql = `INSERT INTO \`${this.fmom.tableName}\` (${this.columnsExpression}) VALUES ?`;
+      const sql = `INSERT INTO \`${this.dom.tableName}\` (${this.columnsExpression}) VALUES ?`;
       const insertValues = this.prepareInsertValues();
-      this.fmom
-        .executeWithParams(sql, [insertValues])
-        .then(resolve)
-        .catch(reject);
+      Context.execute(sql, [insertValues]).then(resolve).catch(reject);
     });
   }
   prepareInsertColumnSql() {
     let arr = [];
-    for (let index = 0; index < this.fmom.modelDefines.length; index++) {
-      const modelDefine = this.fmom.modelDefines[index];
+    for (let index = 0; index < this.dom.mapping.length; index++) {
+      const mapping = this.dom.mapping[index];
       // if set ignore or is auto increment column
-      if (
-        !modelDefine.ignoreInsert &&
-        !modelDefine.increment
-      ) {
-        arr.push("`" + modelDefine.colName + "`");
-        this.columnModels.push(modelDefine);
+      if (!mapping.ignoreInsert && !mapping.increment) {
+        arr.push("`" + mapping.column + "`");
+        this.columnModels.push(mapping);
       }
     }
     this.columnsExpression = arr.join(",");
@@ -81,10 +68,10 @@ class DuckyOrmInsert implements IInsert {
     let insertValues = [];
     for (let i = 0; i < this.values.length; i++) {
       let insertValue = [];
-      const value = this.values[i];
+      const value:IObjectIndex = this.values[i];
       for (let j = 0; j < this.columnModels.length; j++) {
         const model = this.columnModels[j];
-        let val = value[model.propName];
+        let val = value[model.prop];
         insertValue.push(val);
       }
       insertValues.push(insertValue);

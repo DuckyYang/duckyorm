@@ -1,22 +1,20 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-25 13:26:50
- * @LastEditTime: 2021-01-31 11:43:49
+ * @LastEditTime: 2021-02-09 15:07:51
  * @LastEditors: Ducky Yang
  * @Description:
- * @FilePath: /duckyorm/src/lib/command/Where.ts
+ * @FilePath: \duckyorm\src\lib\command\Where.ts
  */
 
-import { CommandType } from "../..";
-import { IDuckyOrmModel, IDuckyOrmWhereModel } from "../../types";
-import LogicType from "../enum/LogicType";
-import DuckyOrmWhereModel from "../model/DuckyOrmWhereModel";
-import DuckyOrmError  from "../DuckyOrmError";
+import { CommandType, LogicType } from "../Enum";
+import { IDuckyOrmModel, IDuckyOrmWhereModel, IWhere } from "../../types";
+import DuckyOrmError from "../DuckyOrmError";
 
-class DuckyOrmWhere {
+class DuckyOrmWhere implements IWhere {
   dom: IDuckyOrmModel;
   whereExpression: string;
-  whereValues: Array<number | string>;
+  whereValues: Array<any>;
   constructor(dom: IDuckyOrmModel) {
     this.dom = dom;
     this.whereExpression = "";
@@ -26,49 +24,79 @@ class DuckyOrmWhere {
     where: IDuckyOrmWhereModel | Array<IDuckyOrmWhereModel>,
     logicType?: LogicType
   ) {
-    // if where is DuckyOrmWhereModel
-    if (where instanceof DuckyOrmWhereModel) {
-      const expr = this.toSql(where);
-      if (this.whereExpression === "") {
-        this.whereExpression = `(${expr})`;
-      } else {
-        this.whereExpression += ` AND (${expr})`;
-      }
-    }
-    if (Array.isArray(where)) {
-      let fullExpr = "";
-      for (let i = 0; i < where.length; i++) {
-        const item = where[i];
-        const expr = this.toSql(item);
-
-        if (fullExpr === "") {
-          fullExpr = expr;
-        } else {
-          fullExpr += `${
-            logicType
-              ? logicType === LogicType.AND
-                ? " AND "
-                : " OR "
-              : " AND "
-          } ${expr}`;
-        }
-      }
-      if (this.whereExpression === "") {
-        this.whereExpression = `(${fullExpr})`;
-      } else {
-        this.whereExpression += ` AND (${fullExpr})`;
-      }
-    }
+    let sql = this.compile(where, logicType);
+    this.whereExpression =
+      this.whereExpression === ""
+        ? `${sql}`
+        : `(${this.whereExpression}) AND (${sql})`;
     return this;
   }
 
-  private toSql(where: IDuckyOrmWhereModel) {
-    const model = this.dom.modelDefines.find(
-      (x) => x.propName === where.propName
-    );
-    let expr = `\`${model?.colName || where.propName}\` `;
+  and(
+    where: IDuckyOrmWhereModel | Array<IDuckyOrmWhereModel>,
+    logicType?: LogicType
+  ) {
+    let sql = this.compile(where, logicType);
+    this.whereExpression =
+      this.whereExpression === ""
+        ? `${sql}`
+        : `(${this.whereExpression}) AND (${sql})`;
+    return this;
+  }
 
-    switch (where.commandType) {
+  or(
+    where: IDuckyOrmWhereModel | Array<IDuckyOrmWhereModel>,
+    logicType?: LogicType
+  ) {
+    let sql = this.compile(where, logicType);
+    this.whereExpression =
+      this.whereExpression === ""
+        ? `${sql}`
+        : `${this.whereExpression} OR ${sql}`;
+    return this;
+  }
+  andOr(
+    where: IDuckyOrmWhereModel | Array<IDuckyOrmWhereModel>,
+    logicType?: LogicType
+  ) {
+    let sql = this.compile(where, logicType);
+    this.whereExpression =
+      this.whereExpression === ""
+        ? `${sql}`
+        : `((${this.whereExpression}) OR ${sql})`;
+    return this;
+  }
+
+  private compile(
+    where: IDuckyOrmWhereModel | Array<IDuckyOrmWhereModel>,
+    logicType?: LogicType
+  ) {
+    let fullExpr = "";
+    if (Array.isArray(where)) {
+      for (let i = 0; i < where.length; i++) {
+        const item = where[i];
+        const expr = this.toSql(item);
+        fullExpr =
+          fullExpr === ""
+            ? expr
+            : `${fullExpr} ${
+                logicType
+                  ? logicType === LogicType.AND
+                    ? " AND "
+                    : " OR "
+                  : " AND "
+              } ${expr}`;
+      }
+    } else {
+      fullExpr = this.toSql(where);
+    }
+    return fullExpr;
+  }
+  private toSql(where: IDuckyOrmWhereModel) {
+    const model = this.dom.mapping.find((x) => x.prop === where.prop);
+    let expr = `\`${model?.column || where.prop}\` `;
+
+    switch (where.command) {
       case CommandType.lt:
         expr += `< ?`;
         break;
@@ -94,10 +122,10 @@ class DuckyOrmWhere {
         expr += "NOT LIKE ?";
         break;
       case CommandType.in:
-        expr += "IN ?";
+        expr += "IN (?)";
         break;
       case CommandType.nin:
-        expr += "NOT IN ?";
+        expr += "NOT IN (?)";
         break;
       case CommandType.bet:
         expr += "BETWEEN ? AND ?";
@@ -106,42 +134,22 @@ class DuckyOrmWhere {
         expr += "= ?";
         break;
     }
-    if (where.commandType != CommandType.bet) {
-      this.whereValues.push(this.convertValueToSql(where.value));
+    if (where.command != CommandType.bet) {
+      this.whereValues.push(where.value);
     } else {
       if (
         !Array.isArray(where.value) ||
         where.value.length < 2 ||
         where.value.some((x) => typeof x !== "number")
       ) {
-        throw new DuckyOrmError (
-          "if command type is between, the value must be of Array<number> type and contains at least two members"
+        throw new DuckyOrmError(
+          "if command type is between, the value must be of Array<number> type and contains two members"
         );
       }
       this.whereValues.push(where.value[0]);
       this.whereValues.push(where.value[1]);
     }
     return expr;
-  }
-  private convertValueToSql(
-    value: number | string | Array<number | string>
-  ): string | number {
-    if (typeof value === "number") {
-      return value;
-    }
-    if (Array.isArray(value)) {
-      let arr = [];
-      for (let i = 0; i < value.length; i++) {
-        const item = value[i];
-        if (typeof item === "number") {
-          arr.push(item);
-        } else {
-          arr.push(`'${item}'`);
-        }
-      }
-      return `(${arr.join(",")})`;
-    }
-    return `${value}`;
   }
 }
 

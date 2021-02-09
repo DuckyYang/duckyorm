@@ -1,20 +1,21 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-20 15:58:44
- * @LastEditTime: 2021-01-25 15:55:06
+ * @LastEditTime: 2021-02-09 11:36:55
  * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\src\lib\command\Table.ts
+ * @FilePath: \duckyorm\src\lib\command\Table.ts
  */
 
-import DbType from "../enum/DbType";
+import { DbType } from "../Enum";
 import { IDuckyOrmModel, ITable } from "../../types";
+import Context from "../DuckyOrm";
 
-class DuckyOrmTable implements ITable {
-  fmom: IDuckyOrmModel;
-  constructor(fmom: IDuckyOrmModel) {
-    this.fmom = fmom;
- 
+class DuckyOrmTable<T> implements ITable<T> {
+  dom: IDuckyOrmModel;
+  constructor(dom: IDuckyOrmModel) {
+    this.dom = dom;
+
     this.prepareColumns();
   }
 
@@ -23,14 +24,14 @@ class DuckyOrmTable implements ITable {
   };
   async create() {
     return new Promise((resolve, reject) => {
-      const sql = `CREATE TABLE \`${this.fmom.tableName}\` (${this.createExpression.columns});`;
-      this.fmom.execute(sql).then(resolve).catch(reject);
+      const sql = `CREATE TABLE IF NOT EXISTS \`${this.dom.tableName}\` (${this.createExpression.columns});`;
+      Context.execute(sql).then(resolve).catch(reject);
     });
   }
   async drop() {
     return new Promise((resolve, reject) => {
-      const sql = `DROP TABLE \`${this.fmom.tableName}\`;`;
-      this.fmom.execute(sql).then(resolve).catch(reject);
+      const sql = `DROP TABLE IF EXISTS \`${this.dom.tableName}\`;`;
+      Context.execute(sql).then(resolve).catch(reject);
     });
   }
   async update() {
@@ -42,11 +43,11 @@ class DuckyOrmTable implements ITable {
   }
   prepareColumns() {
     let arr = [];
-    for (let i = 0; i < this.fmom.modelDefines.length; i++) {
-      const model = this.fmom.modelDefines[i];
+    for (let i = 0; i < this.dom.mapping.length; i++) {
+      const model = this.dom.mapping[i];
 
-      let sql = `\`${model.colName}\` `;
-      switch (model.dbType) {
+      let sql = `\`${model.column}\` `;
+      switch (model.type) {
         case DbType.binary:
         case DbType.tinyint:
         case DbType.smallint:
@@ -60,7 +61,7 @@ class DuckyOrmTable implements ITable {
         case DbType.time:
         case DbType.timestamp:
         case DbType.varbinary:
-          sql += `${model.dbType}(${model.size})`;
+          sql += `${model.type}(${model.size})`;
           break;
         case DbType.bit:
           sql += `bit(1)`;
@@ -70,7 +71,7 @@ class DuckyOrmTable implements ITable {
         case DbType.decimal:
         case DbType.numeric:
         case DbType.real:
-          sql += `${model.dbType}(${model.size},${model.scale})`;
+          sql += `${model.type}(${model.size},${model.scale})`;
           break;
         case DbType.blob:
         case DbType.date:
@@ -87,32 +88,34 @@ class DuckyOrmTable implements ITable {
         case DbType.tinyblob:
         case DbType.tinytext:
         case DbType.text:
-          sql += `${model.dbType}`;
+          sql += `${model.type}`;
           break;
         default:
-          sql += `${model.dbType}`;
+          sql += `${model.type}`;
           break;
       }
       // 是否可空
       sql += ` ${model.nullable ? "NULL" : "NOT NULL"}`;
       // 主键
-      sql += ` ${model.primaryKey ? "PRIMARY KEY" : ""}`;
+      sql += ` ${model.primary ? "PRIMARY KEY" : ""}`;
       // 自增
       sql += ` ${model.increment ? "AUTO_INCREMENT" : ""}`;
       // 默认值
       if (model.default) {
         sql += ` DEFAULT ${model.default}`;
       }
-      if (model.dbType === DbType.timestamp && model.useCurrentTimestamp) {
-        sql += ` ON UPDATE CURRENT_TIMESTAMP`;
+      if (
+        (model.type === DbType.timestamp || model.type === DbType.datetime) &&
+        model.useCurrentTimestamp
+      ) {
+        sql += ` DEFAULT CURRENT_TIMESTAMP(${model.size}) ON UPDATE CURRENT_TIMESTAMP(${model.size})`;
       }
       arr.push(sql + "\r\n");
     }
     this.createExpression.columns = arr.join(",");
   }
   compareTableSchemes() {
-    this.fmom
-      .execute(`SELECT * FROM \`${this.fmom.tableName}\` LIMIT 0;`)
+    Context.execute(`SELECT * FROM \`${this.dom.tableName}\` LIMIT 0;`)
       .then((results) => {
         // 比对modelDefines的信息，将有差异的列进行更新或删除
       })

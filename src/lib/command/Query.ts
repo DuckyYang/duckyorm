@@ -1,17 +1,18 @@
 /*
  * @Author: Ducky Yang
  * @Date: 2021-01-20 13:21:26
- * @LastEditTime: 2021-01-25 17:42:26
+ * @LastEditTime: 2021-02-09 15:32:09
  * @LastEditors: Ducky Yang
  * @Description: In User Settings Edit
- * @FilePath: \FastMysqlOrm\src\lib\command\Query.ts
+ * @FilePath: \duckyorm\src\lib\command\Query.ts
  */
 
-import { IDuckyOrmModel, IQuery, IDuckyOrmModelDefine } from "../../types";
+import { IDuckyOrmModel, IObjectIndex, IOrderBy, IQuery } from "../../types";
 import DuckyOrmError from "../DuckyOrmError";
 import DuckyOrmWhere from "./Where";
+import Context from "../DuckyOrm";
 
-class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
+class DuckyOrmQuery<T> extends DuckyOrmWhere implements IQuery<T> {
   dom: IDuckyOrmModel;
   queryExpression = {
     select: "",
@@ -30,24 +31,24 @@ class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
    * @param {any} columns array or object.If is object like {name:"userName"}，
    * it will generate sql like 'SELECT name as userName FROM XXX;'
    */
-  select(columns: object | Array<string>) {
-    const modelDefines = this.dom.modelDefines;
+  select(columns: any | Array<string>): IQuery<T> {
+    const modelDefines = this.dom.mapping;
     // if columns is empty, it will use defines
     let arr = [];
     if (!columns || (Array.isArray(columns) && columns.length === 0)) {
       for (let index = 0; index < modelDefines.length; index++) {
         const modelDefine = modelDefines[index];
         if (!modelDefine.ignoreSelect) {
-          arr.push("`" + modelDefine.colName + "`");
+          arr.push("`" + modelDefine.column + "`");
         }
       }
     } else {
       if (Array.isArray(columns)) {
         for (let index = 0; index < columns.length; index++) {
           const colName = columns[index];
-          const modelDefine = modelDefines.find((x) => x.colName === colName);
+          const modelDefine = modelDefines.find((x) => x.column === colName);
           if (modelDefine && !modelDefine.ignoreSelect) {
-            arr.push("`" + modelDefine.colName + "`");
+            arr.push("`" + modelDefine.column + "`");
           }
         }
       }
@@ -55,9 +56,9 @@ class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
         for (const key in columns) {
           if (Object.hasOwnProperty.call(columns, key)) {
             const alias = columns[key];
-            const modelDefine = modelDefines.find((x) => x.colName === key);
+            const modelDefine = modelDefines.find((x) => x.column === key);
             if (modelDefine && !modelDefine.ignoreSelect) {
-              arr.push("`" + modelDefine.colName + "` AS `" + alias + "`");
+              arr.push("`" + modelDefine.column + "` AS `" + alias + "`");
             }
           }
         }
@@ -71,27 +72,20 @@ class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
   }
   /**
    * set query order
-   * @param {Array<Array<string>>} order eg: [["id","asc"],["age","desc"]]
+   * @param {Array<IOrderBy>} order eg: [["id","asc"],["age","desc"]]
    * sql is 'order by id asc, age desc'
    */
-  order(order: Array<Array<string>>) {
+  order(order: Array<IOrderBy>): IQuery<T> {
     if (order.length > 0) {
       let arr = [];
       for (let i = 0; i < order.length; i++) {
-        const orderArr = order[i];
-        if (orderArr.length > 2) {
-          const field = orderArr[0];
-          const orderType = orderArr[1];
-          if (
-            field &&
-            (orderType.toLowerCase() === "asc" ||
-              orderType.toLowerCase() === "desc")
-          ) {
-            const model = this.dom.modelDefines.find(
-              (x) => x.propName === field
-            );
-            arr.push(`${model?.colName || field} ${orderType}`);
-          }
+        const orderBy = order[i];
+        if (
+          orderBy.prop &&
+          (orderBy.type === "ASC" || orderBy.type === "DESC")
+        ) {
+          const model = this.dom.mapping.find((x) => x.prop === orderBy.prop);
+          arr.push(`${model?.column || orderBy.prop} ${orderBy.type}`);
         }
       }
       this.queryExpression.order = `ORDER BY ${arr.join(",")}`;
@@ -101,7 +95,7 @@ class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
   /**
    * query single record
    */
-  async single() {
+  async single(): Promise<T | null> {
     return new Promise(async (resolve, reject) => {
       if (!this.queryExpression.select) {
         this.select([]);
@@ -112,10 +106,13 @@ class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
         this.queryExpression.order
       } LIMIT 1;`;
       try {
-        let results = await this.dom.executeWithParams(sql, this.whereValues);
-        const models = _mapToModel(this.dom.diffPropColMapping, results);
+        let results = await Context.execute(
+          sql,
+          this.whereValues
+        );
+        const models = this._mapToModel(results);
         if (models && models.length > 0) {
-          resolve(models[0]);
+          resolve(models[0] as T);
         } else {
           resolve(null);
         }
@@ -127,7 +124,7 @@ class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
   /**
    * query all records
    */
-  async list() {
+  async list(): Promise<T[]> {
     return new Promise(async (resolve, reject) => {
       if (!this.queryExpression.select) {
         this.select([]);
@@ -137,29 +134,48 @@ class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
       } ${this.whereExpression ? "WHERE " + this.whereExpression : ""} ${
         this.queryExpression.order
       };`;
-      const totalSql = `SELECT COUNT(1) AS total ${
-        this.queryExpression.from
-      }  ${this.whereExpression ? "WHERE " + this.whereExpression : ""};`;
       try {
-        let results = await this.dom.executeWithParams(sql, this.whereValues);
-        let total = await this.dom.executeWithParams(
-          totalSql,
+        let results = await Context.execute(
+          sql,
           this.whereValues
         );
 
-        const models = _mapToModel(this.dom.diffPropColMapping, results);
-        resolve([models, total[0].total]);
+        const models = this._mapToModel(results);
+        resolve(models as T[]);
       } catch (error) {
         reject(error);
       }
     });
   }
   /**
+   * query row count
+   */
+  async count(): Promise<number> {
+    return new Promise(async (resolve, reject) => {
+      if (!this.queryExpression.select) {
+        this.select([]);
+      }
+      const totalSql = `SELECT COUNT(1) AS total ${
+        this.queryExpression.from
+      }  ${this.whereExpression ? "WHERE " + this.whereExpression : ""};`;
+      try {
+        let total = await Context.execute(
+          totalSql,
+          this.whereValues
+        );
+        resolve(total[0].total);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
    * query page records
    * @param {number} pageNo page number
    * @param {number} pageSize page size, default 12
    */
-  async page(pageNo: number, pageSize?: number) {
+  async page(pageNo: number, pageSize?: number): Promise<T[]> {
     return new Promise(async (resolve, reject) => {
       if (!pageNo || pageNo <= 0) {
         pageNo = 1;
@@ -176,53 +192,44 @@ class DuckyOrmQuery extends DuckyOrmWhere implements IQuery {
         this.queryExpression.order
       } LIMIT ${(pageNo - 1) * pageSize}, ${pageSize};`;
 
-      const totalSql = `SELECT COUNT(1) AS total ${this.queryExpression.from} ${
-        this.whereExpression ? "WHERE " + this.whereExpression : ""
-      };`;
       try {
-        let results = await this.dom.executeWithParams(
+        let results = await Context.execute(
           pageSql,
           this.whereValues
         );
-        let total = await this.dom.executeWithParams(
-          totalSql,
-          this.whereValues
-        );
-        const models = _mapToModel(this.dom.diffPropColMapping, results);
-        resolve([models, total[0].total]);
+
+        const models = this._mapToModel(results);
+        resolve(models as T[]);
       } catch (error) {
         reject(error);
       }
     });
   }
-}
-/**
- * map query results to define models
- * @param modelDefines
- * @param results
- */
-function _mapToModel(
-  modelDefines: Array<IDuckyOrmModelDefine>,
-  results: any
-): Array<any> {
-  if (results && Array.isArray(results) && results.length > 0) {
-    for (let i = 0; i < results.length; i++) {
-      let data = results[i];
+  _mapToModel(results: any): Array<any> {
+    const modelMapping = this.dom.mappingDiff;
+    let mapResults = [];
+    if (results && Array.isArray(results) && results.length > 0) {
+      for (let i = 0; i < results.length; i++) {
+        let res = results[i];
+        let data:IObjectIndex = {};
+        for (const key in res) {
+          if (Object.hasOwnProperty.call(res, key)) {
+            const value = res[key];
 
-      for (const key in data) {
-        if (Object.hasOwnProperty.call(data, key)) {
-          const value = data[key];
-
-          const modelDefine = modelDefines.find((x) => x.colName === key);
-          if (modelDefine && modelDefine.colName !== modelDefine.propName) {
-            data[modelDefine.propName] = value;
-            delete data[key];
+            const modelDefine = modelMapping.find((x) => x.column === key);
+            if (modelDefine && modelDefine.column !== modelDefine.prop) {
+              data.constructor = this.dom.ctor;
+              data[modelDefine.prop] = value;
+            } else {
+              data[key] = value;
+            }
           }
         }
+        mapResults.push(data);
       }
     }
+    return mapResults;
   }
-  return results;
 }
 
 export default DuckyOrmQuery;

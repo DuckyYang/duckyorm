@@ -6,19 +6,21 @@
 >
 > Email: duckyyang@vip.qq.com
 
-> This is an ORM framework based on node MySQL development in the process of learning node and typescript. 
+### Install
 
-> Install: `npm install duckyorm`
+ `npm install duckyorm`
 
-> Tips:
+### Tips:
+
+> This is an ORM framework based on node MySQL in the process of learning node and typescript. 
 >
-> If you are willing to give me some advice and suggestions, please commit issue, thanks very much!
+> If you are willing to give me some advice and suggestions, please commit issues.
 >
-> If you want to find a stable and efficient orm framework, e... maybe it's a worth try.
+> If you want to find a stable and efficient orm framework, em.... maybe it's a worth try.
 >
 > Thanks
 
-## QuickStart
+## Quick Start
 
 - Define a ORM model
 
@@ -42,7 +44,7 @@ export default class UserClass {
 }
 ```
 
-- Connect to mysql database and registe class to ORM internal
+- Connect to MySql database and registe class to ORM internal cache
 
 ```javascript
 const config = new DuckyOrmConfig(
@@ -67,6 +69,8 @@ const config = new DuckyOrmConfig(
 - Try to execute CRUD command
 
 ```javascript
+import { DuckyOrm } from "duckyorm";
+
 // drop table if exists
 DuckyOrm.table(UserClass).drop();
 // create table if not exists
@@ -123,28 +127,28 @@ await DuckyOrm.update(UserClass).set({
 - `charset`: Database charset.
 - `timeout`: Connect timeout.
 - `aop`: 
-  - `beforeExecute`: Callback before sql execute , it's with two parameters `sql` and `parameters`.
-  - `afterExecute`: Callback after sql execute,it's with tow parameters `sql` and `results`.
+  - `beforeExecute(sql:string,parameters:object)`: Callback before sql execute.
+  - `afterExecute(sql:string,results:object)`: Callback after sql execute.
 
 #### `DuckyOrm`
 
-- `connect`: Connect to database using configs.
-- `define`: Define class model to ORM internal cache. When execute command, ORM will find model defines from cache.
-- `query<T>`: Build a query command.
-- `insert<T>`: Build a insert command.
-- `update<T>`: Build a update command.
-- `delete<T>`: Build a delete command.
-- `table<T>`: Build a table command to create/drop/update table scheme.
-- `execute`: Execute custom sql.
+- `connect(config:IDuckyOrmConfig)`: Connect to database using configs.
+- `define(classes:any[])`: Define class model to ORM internal cache. When execute command, ORM will find model defines from cache.
+- `query<T>(cls:{new():T})`: Build a query command.
+- `insert<T>(cls:{new():T})`: Build a insert command.
+- `update<T>(cls:{new():T})`: Build a update command.
+- `delete<T>(cls:{new():T})`: Build a delete command.
+- `table<T>(cls:{new():T})`: Build a table command to create/drop/update table scheme.
+- `execute(sql:string, parameters:any[])`: Execute custom sql.
 
 #### `Decorators`
 
-- `@table`: Declare the relationship between class and table.
-- `@column`: Declare the mapping between property and column.
-- `@primary`: Declare column is a primary key.
-- `@ignore`: Set column ignore when execute command.
-- `@defaultValue`: Set column default value.
-- `@useCurrentTimestamp`: If column's type is datetime or timestamp, it will use CURRENT_TIMESTAMP to set value when updated.
+- `@table(name:string)`: Declare the relationship between class and table.
+- `@column(name: string,dbType: DbType,size?: ITypeSize,nullable?: boolean)`: Declare the mapping between property and column.
+- `@primary(primary: boolean, increment: boolean)`: Declare column is a primary key.
+- `@ignore(ignoreSelect: boolean,ignoreInsert?: boolean,ignoreUpdate?: boolean)`: Set column ignore when execute command.
+- `@defaultValue(value: string | number)`: Set column default value.
+- `@useCurrentTimestamp()`: If column's type is datetime or timestamp, it will use CURRENT_TIMESTAMP to set value when updated.
 
 #### `IDuckyOrmModel`
 
@@ -172,35 +176,168 @@ await DuckyOrm.update(UserClass).set({
 
 #### `ITable`
 
-- `create`: Create table with model defines.
-- `drop`: Drop table
-- `update`: Update table scheme with model defines. Not implemented yet.
+- `create()`: Create table with model defines.
+- `drop()`: Drop table
+- `update()`: Update table scheme with model defines. Not implemented yet.
 
 #### `IDelete`
 
-- `exec`: Execute command. If where condition is empty, it will not run.
+- `exec()`: Execute command. If where condition is empty, it will not run.
 
 #### `IUpdate`
 
-- `set`: Set all columns and values of Class. It will update columns if not ignore update or not auto increment.
-- `setOnly`: Set the columns and values that only need to be updated.
-- `exec`: Execute command. If where condition is empty, it will not run.
+- `set(value: T)`: Set all columns and values of Class. It will update columns if not ignore update or not auto increment.
+- `setOnly(value:IObjectIndex)`: Set the columns and values that only need to be updated.
+- `exec()`: Execute command. If where condition is empty, it will not run.
 
 #### `IInsert`
 
-- `set`:Set inserted values.
-- `exec`: Execute command.
+- `set(value: object | Array<object>)`:Set inserted values.
+- `exec()`: Execute command.
 
 #### `IQuery`
 
-- `select`:Set query columns.If columns is object, the object value will be used as column alias name.
-- `order`: Set query order by.
-- `single`: Query single record. If get multiple records, it will return top 1.
-- `list`: Query all records.
-- `page`: Query paged records.
-- `count`: Get records row count.
+- `select(columns: any | Array<string>)`:Set query columns.If columns is object, the object value will be used as column alias name.
+- `order(order: Array<IOrderBy>)`: Set query order by.
+- `single()`: Query single record. If get multiple records, it will return top 1.
+- `list()`: Query all records.
+- `page(pageNo: number, pageSize?: number)`: Query paged records.Default pageNo is 1 and pageSize is 12.
+- `count()`: Get records row count.
 
 #### `IWhere`
 
-- `where`: Set where condition with `AND` commands
-- 
+- `where(where: IDuckyOrmWhereModel)`: Set where condition with `AND` command.
+- `where(where: Array<IDuckyOrmWhereModel>, logicType?: LogicType)`: Set where group with `AND` command, and `logicType` indicates the relationship between where group.
+- `and(where: IDuckyOrmWhereModel)`: Same as `where`.
+- `and(where: Array<IDuckyOrmWhereModel>, logicType?: LogicType)`: Same as `where`.
+- `or(where: IDuckyOrmWhereModel)`: Set where with `OR` command. It will be spliced with condition existed.
+- `or(where: Array<IDuckyOrmWhereModel>, logicType?: LogicType)`: Set where group with `OR` command.
+- `andOr(where: IDuckyOrmWhereModel)`: Set where with `OR` command. It will add brackets to the previous condition before splice. 
+- `andOr(where: Array<IDuckyOrmWhereModel>, logicType?: LogicType)`: Set where group with `OR` command.
+
+- The difference between `or()` and `andOr()` is
+
+```javascript
+// let previous condition is
+const condition = 'id>0 and (id=1 or id=10)';
+// use andOr to splice a new condition `name='Ducky'`, the condition is
+const condition = "(id>0 and (id=1 or id=10)) or name='Ducky'";
+// if use or, the condition is 
+const condition = "id>0 and (id=1 or id=10) or name='Ducky'";
+```
+
+#### `IDuckyOrmWhereModel`
+
+- `prop`: property name of Class.
+- `value`: where values.
+- `command`: where command just like `eq` is  `=` ,`gt` is `>`,`lt` is `<`. 
+
+### Samples
+
+- Query the specified column
+
+```javascript
+// SELECT `id`,`name` FROM `user` WHERE `name` LIKE '%10%';
+await DuckyOrm.query(UserClass)
+	.select(["id","name"])
+  .where({prop:"name", value:"%10%",command: CommandType.lk})
+  .list();
+// SELECT `id`,`name` AS `UserName` FROM `user` WHERE `name` LIKE '%10%';
+await DuckyOrm.query(UserClass)
+	.select({id:"id",name:"UserName"})
+  .where({prop:"name", value:"%10%",command: CommandType.lk})
+  .list();
+```
+
+- Query with where group
+
+```javascript
+// SELECT `id`,`name`,`money`,`insert_time` FROM `user` WHERE `id`>500 AND `id`<=1000;
+await DuckyOrm.query(UserClass)
+  .where([
+  	{prop:"id",value:500, command: CommandType.gt},
+		{prop:"id",value:1000,command:CommandType.le}
+   ])
+  .list();
+// SELECT `id`,`name`,`money`,`insert_time` FROM `user` WHERE (`name` LIKE '%10%' OR `money` <2000) AND (`id`>50);
+await DuckyOrm.query(UserClass)
+  .where([
+    {prop:"name", value:"%10%",command: CommandType.lk},
+    {prop:"money", value:"2000",command: CommandType.lt}
+  ],LogicType.OR)
+  .where([
+    {prop:"id", value:"50",command: CommandType.gt}
+  ])
+  .list();
+```
+
+- Query using multiple where conditions
+
+```javascript
+// SELECT `id`,`name`,`money`,`insert_time` FROM `user` WHERE `name` LIKE '%10%' AND `money` <2000 OR `id`>50;
+await DuckyOrm.query(UserClass)
+  .where([
+    {prop:"name", value:"%10%",command: CommandType.lk},
+    {prop:"money", value:"2000",command: CommandType.lt}
+  ],LogicType.AND)
+  .or([
+    {prop:"id", value:"50",command: CommandType.gt}
+  ])
+  .list();
+// SELECT `id`,`name`,`money`,`insert_time` FROM `user` WHERE (`name` LIKE '%10%' AND `money` <2000) OR `id`>50;
+await DuckyOrm.query(UserClass)
+  .where([
+    {prop:"name", value:"%10%",command: CommandType.lk},
+    {prop:"money", value:"2000",command: CommandType.lt}
+  ],LogicType.AND)
+  .andOr([
+    {prop:"id", value:"50",command: CommandType.gt}
+  ])
+  .list();
+```
+
+- Query like
+
+```javascript
+// SELECT `id`,`name`,`money`,`insert_time` FROM `user` WHERE `name` LIKE '%10%';
+await DuckyOrm.query(UserClass)
+  .where({prop:"name", value:"%10%",command: CommandType.lk})
+  .list();
+```
+
+- Query in
+
+```javascript
+// SELECT `id`,`name`,`money`,`insert_time` FROM `user` WHERE `id` IN ('100','500') ORDER BY `insert_time` DESC; 
+await DuckyOrm.query(UserClass)
+    .where({
+      prop: "id",
+      value: ["100", "500"],
+      command: CommandType.in,
+    })
+    .list();
+```
+
+- Query between
+
+```javascript
+// SELECT `id`,`name`,`money`,`insert_time` FROM `user` WHERE `id` BETWEEN 100 AND 500; 
+await DuckyOrm.query(UserClass).where({
+    prop:"id",value:[100,500],command:CommandType.bet
+  }).list();
+```
+
+- Query order by
+
+```javascript
+// SELECT `id`,`name`,`money`,`insert_time` FROM `user` WHERE `id` BETWEEN 100 AND 500 ORDER BY `insert_time` DESC; 
+await DuckyOrm.query(UserClass).where({
+    prop:"id",value:[100,500],command:CommandType.bet
+  })
+  .order([{ prop: "insertTime", type: "DESC" }])
+  .list();
+```
+
+### Final
+
+> I'm a newbee of nodejs and typescript, but unfamiliar language makes me more interested in learning. This framework will continue to improve and enrich the functions, which will be used in my future study.

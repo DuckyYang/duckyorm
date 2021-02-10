@@ -1,6 +1,6 @@
 {
   "name": "duckyorm",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "It's my practice project,it's a mysql orm framework for nodejs. If you want to find a stable and efficient orm framework, please try to find others.Thanks",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,8 @@
     "lib/",
     "index.js",
     "interface.js",
-    "package.json"
+    "package.json",
+    "README.md"
   ],
   "author": "Ducky Yang",
   "license": "MIT",
@@ -29,5 +30,10 @@
   "types": "./lib/index.d.ts",
   "dependencies": {
     "assert": "^2.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DuckyYang/duckyorm"
+  },
+  "homepage": "https://github.com/DuckyYang/duckyorm#readme"
 }
